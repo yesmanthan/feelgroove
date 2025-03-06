@@ -1,19 +1,26 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import MoodSelector, { Mood } from '@/components/MoodSelector';
 import { CardGlass } from '@/components/ui/card-glass';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import SpotifyLogin from '@/components/SpotifyLogin';
+import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
 
 const Index = () => {
   const navigate = useNavigate();
   const [selectedMood, setSelectedMood] = useState<Mood | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
+  const { token, loading } = useSpotifyAuth();
 
-  // Demo function to get recommendations
   const getRecommendations = () => {
+    if (!token) {
+      toast.error('Please connect to Spotify first!');
+      return;
+    }
+    
     if (!selectedMood) {
       toast.error('Please select a mood first!');
       return;
@@ -30,10 +37,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 relative">
-      {/* Animated Background based on selected mood */}
       <AnimatedBackground mood={selectedMood} />
       
-      {/* Content */}
       <div className="w-full max-w-4xl mx-auto z-10 animate-fade-in">
         <header className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-3">FeelGroove</h1>
@@ -41,21 +46,30 @@ const Index = () => {
         </header>
         
         <CardGlass className="mb-8">
-          <MoodSelector 
-            onMoodSelect={setSelectedMood}
-            selectedMood={selectedMood}
-          />
-          
-          <div className="mt-8 flex justify-center">
-            <Button 
-              size="lg" 
-              className="animate-fade-in"
-              onClick={getRecommendations}
-              disabled={!selectedMood || isLoading}
-            >
-              {isLoading ? 'Finding Perfect Songs...' : 'Get Recommendations'}
-            </Button>
-          </div>
+          {!token && !loading ? (
+            <div className="text-center py-8">
+              <h2 className="text-xl font-semibold mb-4">Get Started</h2>
+              <SpotifyLogin />
+            </div>
+          ) : (
+            <>
+              <MoodSelector 
+                onMoodSelect={setSelectedMood}
+                selectedMood={selectedMood}
+              />
+              
+              <div className="mt-8 flex justify-center">
+                <Button 
+                  size="lg" 
+                  className="animate-fade-in"
+                  onClick={getRecommendations}
+                  disabled={!selectedMood || isLoading}
+                >
+                  {isLoading ? 'Finding Perfect Songs...' : 'Get Recommendations'}
+                </Button>
+              </div>
+            </>
+          )}
         </CardGlass>
         
         {/* App Description */}
