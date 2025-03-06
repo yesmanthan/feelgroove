@@ -29,6 +29,7 @@ interface MusicControlsProps {
   onSeek?: (time: number) => void;
   volume?: number;
   onVolumeChange?: (volume: number) => void;
+  disablePlayback?: boolean;
 }
 
 const MusicControls: React.FC<MusicControlsProps> = ({
@@ -45,7 +46,8 @@ const MusicControls: React.FC<MusicControlsProps> = ({
   duration = 0,
   onSeek = () => {},
   volume = 1,
-  onVolumeChange = () => {}
+  onVolumeChange = () => {},
+  disablePlayback = false
 }) => {
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
@@ -58,6 +60,8 @@ const MusicControls: React.FC<MusicControlsProps> = ({
 
   // Handle progress bar click
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (disablePlayback) return;
+    
     const progressBar = e.currentTarget;
     const rect = progressBar.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
@@ -73,14 +77,22 @@ const MusicControls: React.FC<MusicControlsProps> = ({
     <CardGlass className={cn('p-4 w-full', className)}>
       {/* Progress Bar */}
       <div 
-        className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full mb-4 cursor-pointer"
+        className={cn(
+          "w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full mb-4",
+          !disablePlayback && "cursor-pointer"
+        )}
         onClick={handleProgressClick}
       >
         <div 
-          className="h-full bg-primary rounded-full relative"
-          style={{ width: `${(currentTime / duration) * 100}%` }}
+          className={cn(
+            "h-full rounded-full relative",
+            disablePlayback ? "bg-gray-400" : "bg-primary"
+          )}
+          style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
         >
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-primary rounded-full transform scale-150" />
+          {!disablePlayback && (
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-primary rounded-full transform scale-150" />
+          )}
         </div>
       </div>
       
@@ -100,22 +112,34 @@ const MusicControls: React.FC<MusicControlsProps> = ({
         </button>
         
         <button 
-          className="text-foreground hover:text-primary transition transform hover:scale-110"
+          className={cn(
+            "text-foreground transition transform hover:scale-110",
+            disablePlayback ? "opacity-50 cursor-not-allowed" : "hover:text-primary"
+          )}
           onClick={onPrevious}
+          disabled={disablePlayback}
         >
           <SkipBack size={24} />
         </button>
         
         <button 
-          className="bg-primary text-white p-3 rounded-full hover:scale-105 transition transform"
+          className={cn(
+            "bg-primary text-white p-3 rounded-full transition transform",
+            disablePlayback ? "opacity-50 cursor-not-allowed" : "hover:scale-105"
+          )}
           onClick={onPlayPause}
+          disabled={disablePlayback}
         >
           {isPlaying ? <Pause size={24} /> : <Play size={24} className="ml-1" />}
         </button>
         
         <button 
-          className="text-foreground hover:text-primary transition transform hover:scale-110"
+          className={cn(
+            "text-foreground transition transform hover:scale-110",
+            disablePlayback ? "opacity-50 cursor-not-allowed" : "hover:text-primary"
+          )}
           onClick={onNext}
+          disabled={disablePlayback}
         >
           <SkipForward size={24} />
         </button>
@@ -133,23 +157,29 @@ const MusicControls: React.FC<MusicControlsProps> = ({
         <button 
           className={cn(
             "transition transform hover:scale-110",
-            isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+            isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500",
+            disablePlayback && "opacity-50 cursor-not-allowed"
           )}
           onClick={onLike}
+          disabled={disablePlayback}
         >
           <Heart size={20} fill={isLiked ? "currentColor" : "none"} />
         </button>
         
         <div className="relative flex items-center">
           <button 
-            className="text-muted-foreground hover:text-foreground transition"
+            className={cn(
+              "text-muted-foreground hover:text-foreground transition",
+              disablePlayback && "opacity-50 cursor-not-allowed"
+            )}
             onClick={onToggleMute}
-            onMouseEnter={() => setShowVolumeSlider(true)}
+            onMouseEnter={() => !disablePlayback && setShowVolumeSlider(true)}
+            disabled={disablePlayback}
           >
             {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
           </button>
           
-          {showVolumeSlider && (
+          {showVolumeSlider && !disablePlayback && (
             <div 
               className="absolute left-8 w-24 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg animate-fade-in z-10"
               onMouseLeave={() => setShowVolumeSlider(false)}

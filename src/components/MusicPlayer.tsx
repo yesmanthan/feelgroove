@@ -1,74 +1,138 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { CardGlass, CardGlassHeader, CardGlassTitle, CardGlassDescription, CardGlassContent } from './ui/card-glass';
 import MusicControls from './MusicControls';
+import { toast } from 'sonner';
 
-interface Song {
+export interface Song {
   id: string;
   title: string;
   artist: string;
-  album: string;
+  album?: string;
   coverUrl: string;
   duration: number;
+  uri?: string;
+  previewUrl?: string;
 }
 
 interface MusicPlayerProps {
   className?: string;
   song?: Song;
+  onNext?: () => void;
+  onPrevious?: () => void;
+  onComplete?: () => void;
 }
 
 const defaultSong: Song = {
   id: '1',
-  title: 'Placeholder Song',
-  artist: 'Artist Name',
-  album: 'Album Name',
+  title: 'Select a track to play',
+  artist: 'Connect with Spotify to get started',
+  album: 'FeelGroove',
   coverUrl: 'https://placehold.co/300x300/1db954/ffffff?text=Music',
-  duration: 214 // 3:34 in seconds
+  duration: 0
 };
 
 const MusicPlayer: React.FC<MusicPlayerProps> = ({
   className,
-  song = defaultSong
+  song = defaultSong,
+  onNext,
+  onPrevious,
+  onComplete
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(0.8);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   
-  // Simulate playback progress for demo purposes
+  // Initialize audio element when song changes
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setCurrentTime(prev => {
-          if (prev >= song.duration) {
-            setIsPlaying(false);
-            return 0;
-          }
-          return prev + 1;
-        });
-      }, 1000);
+    if (!song.previewUrl) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
+      return;
     }
     
-    return () => {
-      if (interval) clearInterval(interval);
+    if (!audioRef.current) {
+      audioRef.current = new Audio(song.previewUrl);
+    } else {
+      audioRef.current.src = song.previewUrl;
+    }
+    
+    audioRef.current.volume = volume;
+    
+    // Set up event listeners
+    const audio = audioRef.current;
+    
+    const handleTimeUpdate = () => {
+      if (audio) {
+        setCurrentTime(audio.currentTime);
+      }
     };
-  }, [isPlaying, song.duration]);
-
+    
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+      if (onComplete) onComplete();
+    };
+    
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
+    
+    // Reset state when song changes
+    setCurrentTime(0);
+    setIsPlaying(false);
+    
+    return () => {
+      if (audio) {
+        audio.removeEventListener('timeupdate', handleTimeUpdate);
+        audio.removeEventListener('ended', handleEnded);
+        audio.pause();
+      }
+    };
+  }, [song.previewUrl, onComplete, volume]);
+  
+  // Update volume when changed
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
+  
   const handlePlayPause = () => {
+    if (!song.previewUrl) {
+      toast.error("No preview available for this track");
+      return;
+    }
+    
+    if (isPlaying) {
+      audioRef.current?.pause();
+    } else {
+      audioRef.current?.play().catch(error => {
+        console.error("Error playing audio:", error);
+        toast.error("Couldn't play track. Please try again.");
+      });
+    }
+    
     setIsPlaying(!isPlaying);
   };
   
   const handlePrevious = () => {
-    setCurrentTime(0);
+    if (onPrevious) {
+      setCurrentTime(0);
+      onPrevious();
+    }
   };
   
   const handleNext = () => {
-    setCurrentTime(0);
-    // In a real app, we would load the next song here
+    if (onNext) {
+      setCurrentTime(0);
+      onNext();
+    }
   };
   
   const handleToggleMute = () => {
@@ -77,10 +141,18 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   
   const handleLike = () => {
     setIsLiked(!isLiked);
+    if (!isLiked) {
+      toast.success(`Added "${song.title}" to liked songs`);
+    } else {
+      toast.info(`Removed "${song.title}" from liked songs`);
+    }
   };
   
   const handleSeek = (time: number) => {
-    setCurrentTime(time);
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
   };
   
   const handleVolumeChange = (newVolume: number) => {
@@ -108,6 +180,14 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                   <div className="w-16 h-16 rounded-full bg-black/10 backdrop-blur-sm animate-pulse-slow"></div>
                 </div>
               )}
+              
+              {!song.previewUrl && song.id !== '1' && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                  <div className="bg-black/70 text-white px-3 py-1 rounded text-sm">
+                    Preview unavailable
+                  </div>
+                </div>
+              )}
             </div>
             
             <CardGlassTitle className="text-center">{song.title}</CardGlassTitle>
@@ -130,6 +210,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
             onSeek={handleSeek}
             volume={volume}
             onVolumeChange={handleVolumeChange}
+            disablePlayback={!song.previewUrl && song.id !== '1'}
           />
         </CardGlassContent>
       </CardGlass>

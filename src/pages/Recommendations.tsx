@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import { CardGlass, CardGlassTitle, CardGlassDescription } from '@/components/ui/card-glass';
@@ -8,184 +8,66 @@ import { ArrowLeft, Play, Shuffle } from 'lucide-react';
 import { type Mood } from '@/components/MoodSelector';
 import MusicPlayer from '@/components/MusicPlayer';
 import RecentlyPlayed from '@/components/RecentlyPlayed';
-
-// Mock data for demonstration
-const getMockSongs = (mood: Mood) => {
-  const baseSongs = [
-    {
-      id: '1',
-      title: 'Sunshine Vibes',
-      artist: 'Happy Tunes',
-      album: 'Summer Collection',
-      coverUrl: 'https://placehold.co/300x300/FFD166/ffffff?text=Happy',
-      duration: 214,
-    },
-    {
-      id: '2',
-      title: 'Blue Rain',
-      artist: 'Melancholy Melodies',
-      album: 'Rainy Days',
-      coverUrl: 'https://placehold.co/300x300/118AB2/ffffff?text=Sad',
-      duration: 187,
-    },
-    {
-      id: '3',
-      title: 'Electric Energy',
-      artist: 'Power Pulse',
-      album: 'Workout Mix',
-      coverUrl: 'https://placehold.co/300x300/EF476F/ffffff?text=Energy',
-      duration: 198,
-    },
-    {
-      id: '4',
-      title: 'Calm Waters',
-      artist: 'Peaceful Streams',
-      album: 'Meditation Collection',
-      coverUrl: 'https://placehold.co/300x300/06D6A0/ffffff?text=Relax',
-      duration: 246,
-    },
-    {
-      id: '5',
-      title: 'Deep Focus',
-      artist: 'Concentration',
-      album: 'Study Sessions',
-      coverUrl: 'https://placehold.co/300x300/073B4C/ffffff?text=Focus',
-      duration: 328,
-    },
-    {
-      id: '6',
-      title: 'Love Story',
-      artist: 'Heart Beats',
-      album: 'Romance Vol. 1',
-      coverUrl: 'https://placehold.co/300x300/FF9E9E/ffffff?text=Love',
-      duration: 232,
-    },
-  ];
-  
-  // Add some more mock songs based on mood
-  switch (mood) {
-    case 'happy':
-      return [
-        baseSongs[0],
-        { ...baseSongs[0], id: '7', title: 'Happy Days', artist: 'Sunshine Band' },
-        { ...baseSongs[0], id: '8', title: 'Bright Morning', artist: 'The Smiles' },
-        { ...baseSongs[0], id: '9', title: 'Joy Ride', artist: 'Happy Feet' },
-        { ...baseSongs[3], id: '10' },
-        { ...baseSongs[5], id: '11' },
-      ];
-    case 'sad':
-      return [
-        baseSongs[1],
-        { ...baseSongs[1], id: '12', title: 'Lonely Night', artist: 'Blue Notes' },
-        { ...baseSongs[1], id: '13', title: 'Missing You', artist: 'The Heartaches' },
-        { ...baseSongs[1], id: '14', title: 'Empty Room', artist: 'Echo Chamber' },
-        { ...baseSongs[4], id: '15' },
-        { ...baseSongs[5], id: '16' },
-      ];
-    case 'energetic':
-      return [
-        baseSongs[2],
-        { ...baseSongs[2], id: '17', title: 'Power Up', artist: 'Energy Boost' },
-        { ...baseSongs[2], id: '18', title: 'Run Fast', artist: 'Sprinters' },
-        { ...baseSongs[2], id: '19', title: 'Adrenaline', artist: 'High Voltage' },
-        { ...baseSongs[0], id: '20' },
-        { ...baseSongs[4], id: '21' },
-      ];
-    case 'relaxed':
-      return [
-        baseSongs[3],
-        { ...baseSongs[3], id: '22', title: 'Gentle Waves', artist: 'Ocean Sounds' },
-        { ...baseSongs[3], id: '23', title: 'Floating', artist: 'Cloud Walkers' },
-        { ...baseSongs[3], id: '24', title: 'Soft Breeze', artist: 'Nature\'s Touch' },
-        { ...baseSongs[1], id: '25' },
-        { ...baseSongs[4], id: '26' },
-      ];
-    case 'focused':
-      return [
-        baseSongs[4],
-        { ...baseSongs[4], id: '27', title: 'Concentration', artist: 'Mind Masters' },
-        { ...baseSongs[4], id: '28', title: 'Deep Work', artist: 'Productivists' },
-        { ...baseSongs[4], id: '29', title: 'Flow State', artist: 'Brain Waves' },
-        { ...baseSongs[3], id: '30' },
-        { ...baseSongs[2], id: '31' },
-      ];
-    case 'romantic':
-      return [
-        baseSongs[5],
-        { ...baseSongs[5], id: '32', title: 'First Kiss', artist: 'The Romantics' },
-        { ...baseSongs[5], id: '33', title: 'Hold Me Close', artist: 'Tender Touch' },
-        { ...baseSongs[5], id: '34', title: 'Forever Yours', artist: 'Love Letters' },
-        { ...baseSongs[0], id: '35' },
-        { ...baseSongs[3], id: '36' },
-      ];
-    default:
-      return baseSongs;
-  }
-};
-
-const getMockRecentlyPlayed = () => {
-  return [
-    {
-      id: 'recent1',
-      title: 'Recently Played Song 1',
-      artist: 'Recent Artist 1',
-      coverUrl: 'https://placehold.co/300x300/1db954/ffffff?text=Recent'
-    },
-    {
-      id: 'recent2',
-      title: 'Recently Played Song 2',
-      artist: 'Recent Artist 2',
-      coverUrl: 'https://placehold.co/300x300/1db954/ffffff?text=Recent'
-    },
-    {
-      id: 'recent3',
-      title: 'Recently Played Song 3',
-      artist: 'Recent Artist 3',
-      coverUrl: 'https://placehold.co/300x300/1db954/ffffff?text=Recent'
-    },
-    {
-      id: 'recent4',
-      title: 'Recently Played Song 4',
-      artist: 'Recent Artist 4',
-      coverUrl: 'https://placehold.co/300x300/1db954/ffffff?text=Recent'
-    }
-  ];
-};
+import { useSpotifyRecommendations } from '@/hooks/useSpotifyRecommendations';
+import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
+import { formatDuration } from '@/lib/spotifyTransform';
+import SpotifyLogin from '@/components/SpotifyLogin';
+import { toast } from 'sonner';
 
 const Recommendations = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
   const mood = queryParams.get('mood') as Mood || 'relaxed';
+  const { token } = useSpotifyAuth();
   
-  const [songs, setSongs] = useState<any[]>([]);
-  const [recentlyPlayed, setRecentlyPlayed] = useState<any[]>([]);
-  const [currentSong, setCurrentSong] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    loading,
+    recommendations,
+    recentlyPlayed,
+    currentSong,
+    fetchRecommendations,
+    setCurrentSong,
+    nextSong,
+    previousSong
+  } = useSpotifyRecommendations();
   
   useEffect(() => {
-    // Simulate API call to get recommendations
-    setLoading(true);
-    setTimeout(() => {
-      const recommendedSongs = getMockSongs(mood);
-      const recentSongs = getMockRecentlyPlayed();
-      
-      setSongs(recommendedSongs);
-      setRecentlyPlayed(recentSongs);
-      setCurrentSong(recommendedSongs[0]);
-      setLoading(false);
-    }, 1000);
-  }, [mood]);
-  
-  const handleSongSelect = (songId: string) => {
-    const song = songs.find(s => s.id === songId);
-    if (song) {
-      setCurrentSong(song);
+    if (token && mood) {
+      fetchRecommendations(mood);
     }
-  };
+  }, [token, mood, fetchRecommendations]);
   
   const handleBack = () => {
     navigate('/');
+  };
+  
+  const handleSongSelect = (songId: string) => {
+    const song = recommendations.find(s => s.id === songId);
+    if (song) {
+      setCurrentSong(song);
+    } else {
+      // If not in recommendations, check recently played
+      const recentSong = recentlyPlayed.find(s => s.id === songId);
+      if (recentSong) {
+        setCurrentSong(recentSong);
+      }
+    }
+  };
+  
+  const handlePlayAll = () => {
+    if (recommendations.length > 0) {
+      setCurrentSong(recommendations[0]);
+      toast.success('Playing all songs');
+    }
+  };
+  
+  const handleShuffle = () => {
+    if (recommendations.length > 0) {
+      const randomIndex = Math.floor(Math.random() * recommendations.length);
+      setCurrentSong(recommendations[randomIndex]);
+      toast.success('Shuffling songs');
+    }
   };
   
   const getMoodName = (moodKey: Mood): string => {
@@ -199,6 +81,28 @@ const Recommendations = () => {
     };
     return names[moodKey] || 'Unknown';
   };
+  
+  if (!token) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 relative">
+        <AnimatedBackground mood={mood} />
+        
+        <CardGlass className="max-w-md mx-auto">
+          <CardGlassTitle className="mb-4">Please Login to Continue</CardGlassTitle>
+          <CardGlassDescription className="mb-6">
+            You need to connect to Spotify to see recommendations for your {getMoodName(mood).toLowerCase()} mood.
+          </CardGlassDescription>
+          
+          <div className="flex flex-col items-center gap-4">
+            <SpotifyLogin />
+            <Button variant="outline" onClick={handleBack}>
+              Go Back
+            </Button>
+          </div>
+        </CardGlass>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen w-full flex flex-col p-4 md:p-8 relative">
@@ -246,25 +150,41 @@ const Recommendations = () => {
               ) : (
                 <>
                   <div className="flex items-center gap-3 mb-4">
-                    <Button className="flex items-center gap-2">
+                    <Button 
+                      className="flex items-center gap-2"
+                      onClick={handlePlayAll}
+                      disabled={recommendations.length === 0}
+                    >
                       <Play size={16} className="ml-0.5" />
                       <span>Play All</span>
                     </Button>
                     
-                    <Button variant="outline" className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center gap-2"
+                      onClick={handleShuffle}
+                      disabled={recommendations.length === 0}
+                    >
                       <Shuffle size={16} />
                       <span>Shuffle</span>
                     </Button>
                   </div>
                   
                   {/* Current Song Player */}
-                  {currentSong && <MusicPlayer song={currentSong} />}
+                  {currentSong && (
+                    <MusicPlayer 
+                      song={currentSong}
+                      onNext={nextSong}
+                      onPrevious={previousSong}
+                      onComplete={nextSong}
+                    />
+                  )}
                 </>
               )}
             </CardGlass>
             
             {/* Recently Played */}
-            {!loading && (
+            {!loading && recentlyPlayed.length > 0 && (
               <RecentlyPlayed 
                 songs={recentlyPlayed} 
                 onSongSelect={handleSongSelect} 
@@ -284,9 +204,14 @@ const Recommendations = () => {
                 <div className="flex items-center justify-center h-40">
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                 </div>
+              ) : recommendations.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">No recommendations found for this mood.</p>
+                  <Button onClick={() => fetchRecommendations(mood)}>Try Again</Button>
+                </div>
               ) : (
                 <div className="space-y-2">
-                  {songs.map((song, index) => (
+                  {recommendations.map((song, index) => (
                     <div 
                       key={song.id}
                       className={`flex items-center p-3 rounded-lg transition-colors cursor-pointer
@@ -312,7 +237,7 @@ const Recommendations = () => {
                       </div>
                       
                       <div className="text-sm text-muted-foreground">
-                        {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
+                        {formatDuration(song.duration)}
                       </div>
                     </div>
                   ))}
