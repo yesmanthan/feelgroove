@@ -5,6 +5,7 @@ import AnimatedBackground from '@/components/AnimatedBackground';
 import MoodSelector, { Mood } from '@/components/MoodSelector';
 import { CardGlass } from '@/components/ui/card-glass';
 import { Button } from '@/components/ui/button';
+import { Library, Music } from 'lucide-react';
 import { toast } from 'sonner';
 import SpotifyLogin from '@/components/SpotifyLogin';
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
@@ -35,6 +36,10 @@ const Index = () => {
     }, 1500);
   };
 
+  const goToLibrary = () => {
+    navigate('/library');
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 relative">
       <AnimatedBackground mood={selectedMood} />
@@ -58,7 +63,7 @@ const Index = () => {
                 selectedMood={selectedMood}
               />
               
-              <div className="mt-8 flex justify-center">
+              <div className="mt-8 flex justify-center gap-4">
                 <Button 
                   size="lg" 
                   className="animate-fade-in"
@@ -67,6 +72,18 @@ const Index = () => {
                 >
                   {isLoading ? 'Finding Perfect Songs...' : 'Get Recommendations'}
                 </Button>
+                
+                {token && (
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="animate-fade-in flex items-center gap-2"
+                    onClick={goToLibrary}
+                  >
+                    <Library size={18} />
+                    My Library
+                  </Button>
+                )}
               </div>
             </>
           )}

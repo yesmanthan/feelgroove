@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { CardGlass, CardGlassHeader, CardGlassTitle, CardGlassDescription, CardGlassContent } from './ui/card-glass';
 import MusicControls from './MusicControls';
+import { Heart } from 'lucide-react';
+import { useFavorites } from '@/hooks/useFavorites';
 import { toast } from 'sonner';
 
 export interface Song {
@@ -42,10 +44,10 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { isFavorite, toggleFavorite } = useFavorites();
   
   // Initialize audio element when song changes
   useEffect(() => {
@@ -140,11 +142,8 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   };
   
   const handleLike = () => {
-    setIsLiked(!isLiked);
-    if (!isLiked) {
-      toast.success(`Added "${song.title}" to liked songs`);
-    } else {
-      toast.info(`Removed "${song.title}" from liked songs`);
+    if (song.id !== '1') {
+      toggleFavorite(song);
     }
   };
   
@@ -161,6 +160,8 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       setIsMuted(false);
     }
   };
+  
+  const isLiked = song.id !== '1' && isFavorite(song.id);
   
   return (
     <div className={cn('w-full flex flex-col', className)}>
@@ -187,6 +188,21 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                     Preview unavailable
                   </div>
                 </div>
+              )}
+              
+              {song.id !== '1' && (
+                <button 
+                  onClick={handleLike}
+                  className="absolute top-2 right-2 w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center transition-colors hover:bg-black/50"
+                >
+                  <Heart 
+                    size={20} 
+                    className={cn(
+                      "transition-colors", 
+                      isLiked ? "fill-red-500 text-red-500" : "text-white"
+                    )}
+                  />
+                </button>
               )}
             </div>
             

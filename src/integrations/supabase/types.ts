@@ -9,7 +9,119 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      favorites: {
+        Row: {
+          added_at: string | null
+          album: string | null
+          artist: string
+          cover_url: string | null
+          id: string
+          song_id: string
+          song_title: string
+          spotify_uri: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          album?: string | null
+          artist: string
+          cover_url?: string | null
+          id?: string
+          song_id: string
+          song_title: string
+          spotify_uri: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string | null
+          album?: string | null
+          artist?: string
+          cover_url?: string | null
+          id?: string
+          song_id?: string
+          song_title?: string
+          spotify_uri?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      playlist_songs: {
+        Row: {
+          added_at: string | null
+          album: string | null
+          artist: string
+          cover_url: string | null
+          id: string
+          playlist_id: string | null
+          position: number
+          song_id: string
+          song_title: string
+          spotify_uri: string
+        }
+        Insert: {
+          added_at?: string | null
+          album?: string | null
+          artist: string
+          cover_url?: string | null
+          id?: string
+          playlist_id?: string | null
+          position: number
+          song_id: string
+          song_title: string
+          spotify_uri: string
+        }
+        Update: {
+          added_at?: string | null
+          album?: string | null
+          artist?: string
+          cover_url?: string | null
+          id?: string
+          playlist_id?: string | null
+          position?: number
+          song_id?: string
+          song_title?: string
+          spotify_uri?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_songs_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playlists: {
+        Row: {
+          cover_url: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
