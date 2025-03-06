@@ -4,7 +4,8 @@ import { getSpotifyAuthUrl } from '@/lib/spotify';
 
 const SpotifyLogin = () => {
   const handleLogin = () => {
-    window.location.href = getSpotifyAuthUrl();
+    // Open Spotify login in a new tab to avoid CORS issues
+    window.open(getSpotifyAuthUrl(), '_blank');
   };
 
   return (

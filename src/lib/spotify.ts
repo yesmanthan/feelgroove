@@ -21,6 +21,7 @@ export const getSpotifyAuthUrl = () => {
     response_type: 'token',
     redirect_uri: REDIRECT_URI,
     scope: SCOPES,
+    show_dialog: 'true' // Force the user to approve the app again
   });
 
   return `${SPOTIFY_AUTHORIZE_URL}?${params.toString()}`;

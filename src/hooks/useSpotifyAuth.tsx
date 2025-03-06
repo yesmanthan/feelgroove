@@ -13,6 +13,11 @@ export const useSpotifyAuth = () => {
     if (tokenFromUrl) {
       localStorage.setItem('spotify_token', tokenFromUrl);
       setToken(tokenFromUrl);
+      
+      // Clear the hash from the URL to avoid exposing the token
+      if (window.history.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+      }
     } else if (tokenFromStorage) {
       setToken(tokenFromStorage);
     }

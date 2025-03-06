@@ -1,177 +1,90 @@
 
 import React from 'react';
-import { CardGlass, CardGlassTitle, CardGlassContent } from './ui/card-glass';
 import { useFavorites } from '@/hooks/useFavorites';
-import { Play, Heart, Plus, Loader2 } from 'lucide-react';
-import { Button } from './ui/button';
-import { cn } from '@/lib/utils';
-import { formatDuration } from '@/lib/spotifyTransform';
-import { usePlaylists } from '@/hooks/usePlaylists';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { type Song } from './MusicPlayer';
-import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Disc } from 'lucide-react';
+import { Song } from '@/components/MusicPlayer';
 
 interface FavoritesListProps {
-  onSelectSong?: (songId: string) => void;
+  onSelectSong: (songId: string) => void;
 }
 
-const FavoritesList: React.FC<FavoritesListProps> = ({ onSelectSong }) => {
-  const { favorites, isLoading, removeFromFavorites } = useFavorites();
-  const { playlists, createPlaylist, addSongToPlaylist } = usePlaylists();
-
-  const handleAddToPlaylist = (playlistId: string, favorite: any) => {
-    const song: Song = {
-      id: favorite.song_id,
-      title: favorite.song_title,
-      artist: favorite.artist,
-      album: favorite.album,
-      coverUrl: favorite.cover_url || 'https://placehold.co/300x300/1db954/ffffff?text=Music',
-      duration: 0, // We don't have duration stored
-      uri: favorite.spotify_uri
-    };
-
-    addSongToPlaylist({ playlistId, song });
-  };
-
-  const handleCreatePlaylist = async (favorite: any) => {
-    // Prompt for playlist name
-    const name = prompt('Enter playlist name:');
-    if (!name) return;
-
-    try {
-      const playlist = await createPlaylist({ name });
-      if (playlist) {
+const FavoritesList = ({ onSelectSong }: FavoritesListProps) => {
+  const { favorites, isLoading, toggleFavorite } = useFavorites();
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+  
+  if (!favorites || favorites.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground mb-4">You haven't added any favorites yet.</p>
+        <p className="text-sm">Search for songs and click the heart icon to add them to your favorites.</p>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="space-y-2">
+      <h3 className="text-lg font-medium mb-3">Your Favorite Songs</h3>
+      
+      {favorites.map((favorite) => {
+        // Convert from favorite item to Song format
         const song: Song = {
           id: favorite.song_id,
           title: favorite.song_title,
           artist: favorite.artist,
-          album: favorite.album,
-          coverUrl: favorite.cover_url || 'https://placehold.co/300x300/1db954/ffffff?text=Music',
-          duration: 0, // We don't have duration stored
-          uri: favorite.spotify_uri
+          album: favorite.album || '',
+          coverUrl: favorite.cover_url || '',
+          uri: favorite.spotify_uri,
+          duration: 0 // Duration not stored in favorites table
         };
         
-        addSongToPlaylist({ playlistId: playlist.id, song });
-      }
-    } catch (error) {
-      console.error('Error creating playlist:', error);
-      toast.error('Failed to create playlist');
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <CardGlass>
-        <CardGlassTitle className="mb-4">Your Favorites</CardGlassTitle>
-        <CardGlassContent>
-          <div className="flex justify-center py-10">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        </CardGlassContent>
-      </CardGlass>
-    );
-  }
-
-  if (!favorites || favorites.length === 0) {
-    return (
-      <CardGlass>
-        <CardGlassTitle className="mb-4">Your Favorites</CardGlassTitle>
-        <CardGlassContent>
-          <div className="text-center py-8 text-muted-foreground">
-            You haven't saved any favorites yet. Like a song to see it here!
-          </div>
-        </CardGlassContent>
-      </CardGlass>
-    );
-  }
-
-  return (
-    <CardGlass>
-      <CardGlassTitle className="mb-4">Your Favorites</CardGlassTitle>
-      <CardGlassContent>
-        <div className="space-y-1">
-          {favorites.map((favorite) => (
-            <div
-              key={favorite.id}
-              className="flex items-center p-2 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5"
-            >
-              <div className="w-12 h-12 rounded overflow-hidden mr-3 flex-shrink-0">
-                <img
-                  src={favorite.cover_url || 'https://placehold.co/300x300/1db954/ffffff?text=Music'}
-                  alt={favorite.song_title}
+        return (
+          <div 
+            key={favorite.id}
+            className="flex items-center p-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+            onClick={() => onSelectSong(song.id)}
+          >
+            <div className="w-12 h-12 rounded overflow-hidden mr-4 flex-shrink-0">
+              {song.coverUrl ? (
+                <img 
+                  src={song.coverUrl} 
+                  alt={song.title} 
                   className="w-full h-full object-cover"
                 />
-              </div>
-
-              <div className="flex-grow mr-3 min-w-0">
-                <h3 className="font-medium text-sm line-clamp-1">{favorite.song_title}</h3>
-                <p className="text-xs text-muted-foreground line-clamp-1">{favorite.artist}</p>
-              </div>
-
-              <div className="flex items-center gap-1">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => onSelectSong && onSelectSong(favorite.song_id)}
-                  title="Play"
-                  className="h-8 w-8"
-                >
-                  <Play size={16} />
-                </Button>
-
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => removeFromFavorites(favorite.song_id)}
-                  title="Remove from favorites"
-                  className="h-8 w-8 text-red-500 hover:text-red-600"
-                >
-                  <Heart size={16} className="fill-current" />
-                </Button>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8"
-                      title="Add to playlist"
-                    >
-                      <Plus size={16} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => handleCreatePlaylist(favorite)}
-                      className="cursor-pointer"
-                    >
-                      Create new playlist
-                    </DropdownMenuItem>
-                    
-                    {playlists && playlists.length > 0 && (
-                      <>
-                        <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                          Add to existing playlist
-                        </div>
-                        {playlists.map((playlist) => (
-                          <DropdownMenuItem
-                            key={playlist.id}
-                            onClick={() => handleAddToPlaylist(playlist.id, favorite)}
-                            className="cursor-pointer"
-                          >
-                            {playlist.name}
-                          </DropdownMenuItem>
-                        ))}
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              ) : (
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                  <Disc size={20} className="text-primary" />
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-      </CardGlassContent>
-    </CardGlass>
+            
+            <div className="flex-grow mr-4">
+              <h3 className="font-medium line-clamp-1">{song.title}</h3>
+              <p className="text-sm text-muted-foreground line-clamp-1">{song.artist}</p>
+            </div>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-shrink-0 text-red-500"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFavorite(song);
+              }}
+            >
+              ❤️
+            </Button>
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
