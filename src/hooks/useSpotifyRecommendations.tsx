@@ -11,7 +11,7 @@ import {
   getUserPlaylists,
   search,
   getSavedTracks
-} from '@/lib/spotifyApi';
+} from '@/lib/spotify';
 import { 
   transformRecommendations,
   transformRecentlyPlayed
