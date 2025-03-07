@@ -11,6 +11,9 @@ const SCOPES = [
   'user-read-currently-playing',
   'streaming',
   'playlist-read-private',
+  'playlist-read-recently-played',
+  'user-library-read',
+  'user-library-modify',
   'playlist-modify-public',
   'playlist-modify-private'
 ].join(' ');
@@ -48,6 +51,7 @@ export const getSpotifyAuthUrl = () => {
     show_dialog: 'true' // Force the user to approve the app again
   });
 
+  console.log("Spotify Auth URL:", `${SPOTIFY_AUTHORIZE_URL}?${params.toString()}`);
   return `${SPOTIFY_AUTHORIZE_URL}?${params.toString()}`;
 };
 

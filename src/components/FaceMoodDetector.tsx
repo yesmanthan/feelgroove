@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { CardGlass } from './ui/card-glass';
-import { Camera, X } from 'lucide-react';
+import { Camera, X, AlertTriangle } from 'lucide-react';
 import { Mood } from './MoodSelector';
 import { toast } from 'sonner';
 
@@ -14,6 +14,8 @@ interface FaceMoodDetectorProps {
   onMoodDetected: (mood: Mood) => void;
 }
 
+const MODEL_URL = '/models';
+
 const FaceMoodDetector: React.FC<FaceMoodDetectorProps> = ({ onMoodDetected }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -22,6 +24,7 @@ const FaceMoodDetector: React.FC<FaceMoodDetectorProps> = ({ onMoodDetected }) =
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [detectedExpression, setDetectedExpression] = useState<string | null>(null);
+  const [modelLoadingError, setModelLoadingError] = useState<string | null>(null);
   
   // Expression to mood mapping
   const expressionToMood: Record<string, Mood> = {
@@ -38,15 +41,28 @@ const FaceMoodDetector: React.FC<FaceMoodDetectorProps> = ({ onMoodDetected }) =
   useEffect(() => {
     const loadModels = async () => {
       try {
+        setModelLoadingError(null);
         await tf.ready();
-        await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
-        await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-        await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
-        await faceapi.nets.faceExpressionNet.loadFromUri('/models');
+        
+        // Log model URL for debugging
+        console.log('Loading models from:', MODEL_URL);
+        
+        // Load all required models
+        const modelLoadPromises = [
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+          faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL)
+        ];
+        
+        await Promise.all(modelLoadPromises);
+        
         setIsModelLoaded(true);
-        console.log('Face detection models loaded');
+        console.log('Face detection models loaded successfully');
+        toast.success('Face detection models loaded successfully');
       } catch (error) {
         console.error('Error loading models:', error);
+        setModelLoadingError('Failed to load face detection models. Please ensure the model files are available.');
         toast.error('Failed to load face detection models');
       }
     };
@@ -64,7 +80,13 @@ const FaceMoodDetector: React.FC<FaceMoodDetectorProps> = ({ onMoodDetected }) =
   const startCamera = async () => {
     try {
       setCameraError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: "user"
+        } 
+      });
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -115,7 +137,7 @@ const FaceMoodDetector: React.FC<FaceMoodDetectorProps> = ({ onMoodDetected }) =
       // Detect faces and expressions
       const detections = await faceapi.detectAllFaces(
         videoRef.current, 
-        new faceapi.TinyFaceDetectorOptions()
+        new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5 })
       )
       .withFaceLandmarks()
       .withFaceExpressions();
@@ -170,6 +192,19 @@ const FaceMoodDetector: React.FC<FaceMoodDetectorProps> = ({ onMoodDetected }) =
           Let us analyze your facial expression to recommend music that matches your mood.
         </p>
       </div>
+      
+      {modelLoadingError && (
+        <div className="bg-destructive/10 text-destructive rounded-md p-3 mb-4 flex items-start">
+          <AlertTriangle size={18} className="mr-2 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium">{modelLoadingError}</p>
+            <p className="text-xs mt-1">
+              You may need to download the face detection models to the /public/models directory. 
+              See the README.md file in that directory for instructions.
+            </p>
+          </div>
+        </div>
+      )}
       
       <div className="relative w-full max-w-md mx-auto overflow-hidden rounded-lg mb-4">
         {isCameraActive && (

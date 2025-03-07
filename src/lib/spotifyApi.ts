@@ -7,13 +7,28 @@ const BASE_URL = 'https://api.spotify.com/v1';
 // Helper function to handle API responses
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
-    const error = await response.json();
-    if (response.status === 401) {
-      // Token expired, need to refresh
-      localStorage.removeItem('spotify_token');
-      toast.error('Your session has expired. Please log in again.');
+    // Log the error response for debugging
+    try {
+      const errorData = await response.json();
+      console.error('Spotify API error:', errorData);
+      
+      if (response.status === 401) {
+        // Token expired, need to refresh
+        localStorage.removeItem('spotify_token');
+        localStorage.removeItem('spotify_token_timestamp');
+        toast.error('Your session has expired. Please log in again.');
+      } else if (response.status === 429) {
+        // Rate limiting
+        toast.error('Too many requests to Spotify. Please try again later.');
+      } else {
+        toast.error(errorData.error?.message || 'An error occurred with Spotify');
+      }
+      
+      throw new Error(errorData.error?.message || 'An error occurred');
+    } catch (e) {
+      console.error('Error parsing error response:', e);
+      throw new Error(`HTTP error ${response.status}`);
     }
-    throw new Error(error.error?.message || 'An error occurred');
   }
   return response.json();
 };
@@ -29,6 +44,7 @@ const getHeaders = (token: string) => {
 // Get user profile
 export const getUserProfile = async (token: string) => {
   try {
+    console.log('Fetching user profile...');
     const response = await fetch(`${BASE_URL}/me`, {
       headers: getHeaders(token),
     });
@@ -42,6 +58,7 @@ export const getUserProfile = async (token: string) => {
 // Get user's playlists
 export const getUserPlaylists = async (token: string) => {
   try {
+    console.log('Fetching user playlists...');
     const response = await fetch(`${BASE_URL}/me/playlists?limit=50`, {
       headers: getHeaders(token),
     });
@@ -55,6 +72,7 @@ export const getUserPlaylists = async (token: string) => {
 // Get user's recently played tracks
 export const getRecentlyPlayed = async (token: string, limit = 20) => {
   try {
+    console.log('Fetching recently played tracks...');
     const response = await fetch(`${BASE_URL}/me/player/recently-played?limit=${limit}`, {
       headers: getHeaders(token),
     });
@@ -115,6 +133,7 @@ export const getRecommendations = async (
       params.append('target_tempo', options.target_tempo.toString());
     }
     
+    console.log('Fetching recommendations with params:', params.toString());
     const response = await fetch(`${BASE_URL}/recommendations?${params.toString()}`, {
       headers: getHeaders(token),
     });
@@ -129,6 +148,7 @@ export const getRecommendations = async (
 // Get audio features for a track (tempo, energy, etc.)
 export const getAudioFeatures = async (token: string, trackId: string) => {
   try {
+    console.log('Fetching audio features for track:', trackId);
     const response = await fetch(`${BASE_URL}/audio-features/${trackId}`, {
       headers: getHeaders(token),
     });
@@ -142,6 +162,7 @@ export const getAudioFeatures = async (token: string, trackId: string) => {
 // Get available genres
 export const getAvailableGenres = async (token: string) => {
   try {
+    console.log('Fetching available genres...');
     const response = await fetch(`${BASE_URL}/recommendations/available-genre-seeds`, {
       headers: getHeaders(token),
     });
@@ -161,6 +182,7 @@ export const search = async (token: string, query: string, type: string = 'track
       limit: limit.toString(),
     });
     
+    console.log('Searching for:', query, 'type:', type);
     const response = await fetch(`${BASE_URL}/search?${params.toString()}`, {
       headers: getHeaders(token),
     });
@@ -175,6 +197,7 @@ export const search = async (token: string, query: string, type: string = 'track
 // Get a track by ID
 export const getTrack = async (token: string, trackId: string) => {
   try {
+    console.log('Fetching track:', trackId);
     const response = await fetch(`${BASE_URL}/tracks/${trackId}`, {
       headers: getHeaders(token),
     });
@@ -192,6 +215,7 @@ export const playTrack = async (token: string, uri: string, deviceId?: string) =
       ? `${BASE_URL}/me/player/play?device_id=${deviceId}`
       : `${BASE_URL}/me/player/play`;
       
+    console.log('Playing track:', uri, 'on device:', deviceId || 'default');
     const response = await fetch(endpoint, {
       method: 'PUT',
       headers: getHeaders(token),
@@ -207,6 +231,76 @@ export const playTrack = async (token: string, uri: string, deviceId?: string) =
     return handleResponse(response);
   } catch (error) {
     console.error('Error playing track:', error);
+    throw error;
+  }
+};
+
+// Get the user's saved tracks
+export const getSavedTracks = async (token: string, limit = 20, offset = 0) => {
+  try {
+    console.log('Fetching saved tracks...');
+    const response = await fetch(`${BASE_URL}/me/tracks?limit=${limit}&offset=${offset}`, {
+      headers: getHeaders(token),
+    });
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Error fetching saved tracks:', error);
+    throw error;
+  }
+};
+
+// Check if tracks are saved in user's library
+export const checkSavedTracks = async (token: string, trackIds: string[]) => {
+  try {
+    console.log('Checking if tracks are saved:', trackIds);
+    const response = await fetch(`${BASE_URL}/me/tracks/contains?ids=${trackIds.join(',')}`, {
+      headers: getHeaders(token),
+    });
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Error checking saved tracks:', error);
+    throw error;
+  }
+};
+
+// Save tracks to user's library
+export const saveTracks = async (token: string, trackIds: string[]) => {
+  try {
+    console.log('Saving tracks:', trackIds);
+    const response = await fetch(`${BASE_URL}/me/tracks`, {
+      method: 'PUT',
+      headers: getHeaders(token),
+      body: JSON.stringify({ ids: trackIds }),
+    });
+    
+    if (response.status === 200) {
+      return { success: true };
+    }
+    
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Error saving tracks:', error);
+    throw error;
+  }
+};
+
+// Remove tracks from user's library
+export const removeTracks = async (token: string, trackIds: string[]) => {
+  try {
+    console.log('Removing tracks:', trackIds);
+    const response = await fetch(`${BASE_URL}/me/tracks`, {
+      method: 'DELETE',
+      headers: getHeaders(token),
+      body: JSON.stringify({ ids: trackIds }),
+    });
+    
+    if (response.status === 200) {
+      return { success: true };
+    }
+    
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Error removing tracks:', error);
     throw error;
   }
 };
