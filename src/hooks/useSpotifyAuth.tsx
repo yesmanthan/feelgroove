@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { getAccessTokenFromUrl } from '@/lib/spotify';
+import { getAccessTokenFromUrl, isTokenExpired, storeToken } from '@/lib/spotify';
 import { toast } from 'sonner';
 
 export const useSpotifyAuth = () => {
@@ -14,11 +14,13 @@ export const useSpotifyAuth = () => {
         const tokenFromUrl = getAccessTokenFromUrl();
         
         // Check for token in localStorage
-        const tokenFromStorage = localStorage.getItem('spotify_token');
+        const storedToken = localStorage.getItem('spotify_token');
+        const tokenTimestamp = localStorage.getItem('spotify_token_timestamp');
         
         if (tokenFromUrl) {
           console.log('Found token in URL');
-          localStorage.setItem('spotify_token', tokenFromUrl);
+          // Store token with timestamp
+          storeToken(tokenFromUrl);
           setToken(tokenFromUrl);
           
           // Clear the hash from the URL to avoid exposing the token
@@ -27,9 +29,19 @@ export const useSpotifyAuth = () => {
           }
           
           toast.success('Successfully connected to Spotify!');
-        } else if (tokenFromStorage) {
+        } else if (storedToken && tokenTimestamp) {
           console.log('Found token in storage');
-          setToken(tokenFromStorage);
+          
+          // Check if token is expired
+          if (isTokenExpired(parseInt(tokenTimestamp, 10))) {
+            console.log('Token expired, clearing');
+            localStorage.removeItem('spotify_token');
+            localStorage.removeItem('spotify_token_timestamp');
+            setToken(null);
+            toast.error('Your Spotify session has expired. Please connect again.');
+          } else {
+            setToken(storedToken);
+          }
         } else {
           console.log('No token found');
         }
@@ -58,6 +70,7 @@ export const useSpotifyAuth = () => {
 
   const logout = () => {
     localStorage.removeItem('spotify_token');
+    localStorage.removeItem('spotify_token_timestamp');
     setToken(null);
     toast.info('Logged out from Spotify');
   };

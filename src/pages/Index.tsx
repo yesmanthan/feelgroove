@@ -9,6 +9,7 @@ import { Library, Music } from 'lucide-react';
 import { toast } from 'sonner';
 import SpotifyLogin from '@/components/SpotifyLogin';
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
+import FaceMoodDetector from '@/components/FaceMoodDetector';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -40,6 +41,11 @@ const Index = () => {
     navigate('/library');
   };
 
+  const handleMoodDetected = (mood: Mood) => {
+    setSelectedMood(mood);
+    toast.success(`Mood detected: ${mood}. Ready for recommendations!`);
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 relative">
       <AnimatedBackground mood={selectedMood} />
@@ -58,6 +64,9 @@ const Index = () => {
             </div>
           ) : (
             <>
+              {/* Face Mood Detector Component */}
+              <FaceMoodDetector onMoodDetected={handleMoodDetected} />
+              
               <MoodSelector 
                 onMoodSelect={setSelectedMood}
                 selectedMood={selectedMood}
