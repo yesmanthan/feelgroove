@@ -18,32 +18,10 @@ const SpotifyLogin = () => {
       const authUrl = getSpotifyAuthUrl();
       console.log("Attempting to open Spotify login at:", authUrl);
       
-      // Open Spotify login in a new tab to avoid CORS issues
-      const authWindow = window.open(authUrl, '_blank');
+      // Open Spotify login in the same window to avoid popup blockers
+      window.location.href = authUrl;
       
-      if (!authWindow) {
-        setLoginError('Pop-up blocked! Please allow pop-ups for this site.');
-        toast.error('Pop-up blocked! Please allow pop-ups for this site.');
-      } else {
-        toast.info('Spotify login opened in a new tab. Please complete the login process there.');
-        
-        // Add message listener to handle communication between windows
-        window.addEventListener('message', (event) => {
-          // Only accept messages from our application
-          if (event.origin !== window.location.origin) return;
-          
-          if (event.data && event.data.type === 'SPOTIFY_AUTH_SUCCESS') {
-            toast.success('Successfully connected to Spotify!');
-            // Force reload to process the token
-            window.location.reload();
-          }
-        }, { once: true });
-        
-        // Set a timeout to check if user completed the auth
-        setTimeout(() => {
-          setIsAttemptingLogin(false);
-        }, 30000); // 30 seconds timeout
-      }
+      toast.info('Redirecting to Spotify login...');
     } catch (error) {
       console.error('Login error:', error);
       setLoginError('Failed to open Spotify login. Please try again.');

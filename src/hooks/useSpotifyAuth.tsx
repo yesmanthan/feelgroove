@@ -24,7 +24,7 @@ export const useSpotifyAuth = () => {
         console.log("Token check - Stored token:", storedToken ? "present" : "not present");
         
         if (tokenFromUrl) {
-          console.log('Found token in URL');
+          console.log('Found token in URL, storing it');
           // Store token with timestamp
           storeToken(tokenFromUrl);
           setToken(tokenFromUrl);
@@ -36,7 +36,7 @@ export const useSpotifyAuth = () => {
           
           toast.success('Successfully connected to Spotify!');
         } else if (storedToken && tokenTimestamp) {
-          console.log('Found token in storage');
+          console.log('Found token in storage, checking if expired');
           
           // Check if token is expired
           if (isTokenExpired(parseInt(tokenTimestamp, 10))) {
@@ -47,6 +47,7 @@ export const useSpotifyAuth = () => {
             setError('Your Spotify session has expired. Please connect again.');
             toast.error('Your Spotify session has expired. Please connect again.');
           } else {
+            console.log('Token valid, using it');
             setToken(storedToken);
           }
         } else {

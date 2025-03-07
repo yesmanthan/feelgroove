@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { CardGlass } from './ui/card-glass';
-import { Camera, X, AlertTriangle } from 'lucide-react';
+import { Camera, X, AlertTriangle, Download } from 'lucide-react';
 import { Mood } from './MoodSelector';
 import { toast } from 'sonner';
 
@@ -25,6 +25,7 @@ const FaceMoodDetector: React.FC<FaceMoodDetectorProps> = ({ onMoodDetected }) =
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [detectedExpression, setDetectedExpression] = useState<string | null>(null);
   const [modelLoadingError, setModelLoadingError] = useState<string | null>(null);
+  const [isModelLoading, setIsModelLoading] = useState(false);
   
   // Expression to mood mapping
   const expressionToMood: Record<string, Mood> = {
@@ -41,6 +42,7 @@ const FaceMoodDetector: React.FC<FaceMoodDetectorProps> = ({ onMoodDetected }) =
   useEffect(() => {
     const loadModels = async () => {
       try {
+        setIsModelLoading(true);
         setModelLoadingError(null);
         await tf.ready();
         
@@ -58,10 +60,12 @@ const FaceMoodDetector: React.FC<FaceMoodDetectorProps> = ({ onMoodDetected }) =
         await Promise.all(modelLoadPromises);
         
         setIsModelLoaded(true);
+        setIsModelLoading(false);
         console.log('Face detection models loaded successfully');
         toast.success('Face detection models loaded successfully');
       } catch (error) {
         console.error('Error loading models:', error);
+        setIsModelLoading(false);
         setModelLoadingError('Failed to load face detection models. Please ensure the model files are available.');
         toast.error('Failed to load face detection models');
       }
@@ -184,6 +188,12 @@ const FaceMoodDetector: React.FC<FaceMoodDetectorProps> = ({ onMoodDetected }) =
     }
   };
 
+  // Function to help download models
+  const openModelDownloadLink = () => {
+    window.open('https://github.com/vladmandic/face-api/tree/master/model', '_blank');
+    toast.info('Opening model download page. Download and place files in your public/models directory.');
+  };
+
   return (
     <CardGlass className="p-4 mb-6">
       <div className="text-center mb-4">
@@ -199,10 +209,25 @@ const FaceMoodDetector: React.FC<FaceMoodDetectorProps> = ({ onMoodDetected }) =
           <div>
             <p className="text-sm font-medium">{modelLoadingError}</p>
             <p className="text-xs mt-1">
-              You may need to download the face detection models to the /public/models directory. 
-              See the README.md file in that directory for instructions.
+              You need to download the face detection models to the /public/models directory.
             </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2 text-xs flex items-center gap-1"
+              onClick={openModelDownloadLink}
+            >
+              <Download size={14} />
+              Download Models
+            </Button>
           </div>
+        </div>
+      )}
+      
+      {isModelLoading && !modelLoadingError && (
+        <div className="text-center py-4 mb-4">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-sm text-muted-foreground">Loading face detection models...</p>
         </div>
       )}
       
@@ -254,7 +279,7 @@ const FaceMoodDetector: React.FC<FaceMoodDetectorProps> = ({ onMoodDetected }) =
         {!isCameraActive ? (
           <Button 
             onClick={startCamera} 
-            disabled={!isModelLoaded || isAnalyzing}
+            disabled={!isModelLoaded || isAnalyzing || isModelLoading}
             className="flex items-center gap-2"
           >
             <Camera size={16} />

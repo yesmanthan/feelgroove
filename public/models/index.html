@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Face API Models</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      line-height: 1.5;
+    }
+    pre {
+      background-color: #f4f4f4;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+    }
+    code {
+      font-family: monospace;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .alert {
+      background-color: #fff3cd;
+      border: 1px solid #ffeeba;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+    .button {
+      display: inline-block;
+      background-color: #007bff;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      text-decoration: none;
+      margin-top: 1rem;
+    }
+    .file-list {
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Face API Models</h1>
+  
+  <div class="alert">
+    <strong>Model files are missing!</strong> This directory should contain the face-api.js model files.
+  </div>
+  
+  <p>
+    The FeelGroove app needs face detection models to analyze your facial expressions. 
+    These files need to be downloaded and placed in this directory.
+  </p>
+  
+  <h2>Required Model Files</h2>
+  
+  <div class="file-list">
+    <ul>
+      <li>tiny_face_detector_model-shard1</li>
+      <li>tiny_face_detector_model-weights_manifest.json</li>
+      <li>face_expression_model-shard1</li>
+      <li>face_expression_model-weights_manifest.json</li>
+      <li>face_landmark_68_model-shard1</li>
+      <li>face_landmark_68_model-weights_manifest.json</li>
+      <li>face_recognition_model-shard1</li>
+      <li>face_recognition_model-shard2</li>
+      <li>face_recognition_model-weights_manifest.json</li>
+    </ul>
+  </div>
+  
+  <h2>Download Instructions</h2>
+  
+  <div class="container">
+    <p>Option 1: Download directly from the GitHub repository:</p>
+    <a href="https://github.com/vladmandic/face-api/tree/master/model" target="_blank" class="button">
+      Download from GitHub
+    </a>
+    
+    <p>Option 2: Using command line (requires Git):</p>
+    <pre><code>git clone https://github.com/vladmandic/face-api.git
+cp -r face-api/model/* /path/to/your/project/public/models/</code></pre>
+    
+    <p>
+      After downloading, make sure all model files are placed directly in this directory 
+      (public/models/) for the face detection to work properly.
+    </p>
+  </div>
+</body>
+</html>

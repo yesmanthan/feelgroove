@@ -11,11 +11,9 @@ const SCOPES = [
   'user-read-currently-playing',
   'streaming',
   'playlist-read-private',
-  'playlist-read-recently-played',
+  'user-read-recently-played',
   'user-library-read',
-  'user-library-modify',
-  'playlist-modify-public',
-  'playlist-modify-private'
+  'user-top-read'
 ].join(' ');
 
 // Generate a random state value for CSRF protection
