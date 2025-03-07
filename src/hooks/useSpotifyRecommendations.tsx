@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSpotifyAuth } from './useSpotifyAuth';
 import { useMoodMapper } from './useMoodMapper';
@@ -8,7 +7,8 @@ import {
   getRecommendations, 
   getAvailableGenres, 
   getRecentlyPlayed,
-  getUserPlaylists
+  getUserPlaylists,
+  search
 } from '@/lib/spotifyApi';
 import { 
   transformRecommendations,
@@ -26,6 +26,7 @@ interface UseRecommendationsResult {
   setCurrentSong: (song: Song) => void;
   nextSong: () => void;
   previousSong: () => void;
+  searchSongs: (query: string) => Promise<Song[]>;
 }
 
 export const useSpotifyRecommendations = (): UseRecommendationsResult => {
@@ -39,7 +40,6 @@ export const useSpotifyRecommendations = (): UseRecommendationsResult => {
   const [error, setError] = useState<Error | null>(null);
   const [availableGenres, setAvailableGenres] = useState<string[]>([]);
 
-  // Fetch available genres on mount
   useEffect(() => {
     const fetchGenres = async () => {
       if (!token) return;
@@ -55,7 +55,6 @@ export const useSpotifyRecommendations = (): UseRecommendationsResult => {
     fetchGenres();
   }, [token]);
 
-  // Fetch recommendations based on mood
   const fetchRecommendations = async (mood: Mood) => {
     if (!token) {
       toast.error('You need to log in with Spotify first');
@@ -66,23 +65,18 @@ export const useSpotifyRecommendations = (): UseRecommendationsResult => {
     setError(null);
     
     try {
-      // Get mood-specific audio features
       const moodFeatures = getMoodFeatures(mood);
       
-      // Filter genres to only include available ones from Spotify
       const filteredGenres = moodFeatures.genres.filter(
         genre => availableGenres.includes(genre)
-      ).slice(0, 2); // Spotify allows max 5 seed values in total
+      ).slice(0, 2);
       
-      // Fetch recently played for potential seed tracks
       const recentResponse = await getRecentlyPlayed(token, 10);
       const recentTracks = transformRecentlyPlayed(recentResponse);
       setRecentlyPlayed(recentTracks);
       
-      // Get first track ID for seed if available
       const seedTrack = recentTracks[0]?.id;
       
-      // Request recommendations
       const recommendationsResponse = await getRecommendations(token, {
         seed_genres: filteredGenres,
         seed_tracks: seedTrack ? [seedTrack] : undefined,
@@ -93,12 +87,10 @@ export const useSpotifyRecommendations = (): UseRecommendationsResult => {
         target_tempo: moodFeatures.tempo
       });
       
-      // Transform response to our Song format
       const songs = transformRecommendations(recommendationsResponse);
       
       setRecommendations(songs);
       
-      // Set current song to first recommendation if we have any
       if (songs.length > 0) {
         setCurrentSong(songs[0]);
         setCurrentSongIndex(0);
@@ -113,7 +105,22 @@ export const useSpotifyRecommendations = (): UseRecommendationsResult => {
     }
   };
 
-  // Handle song navigation
+  const searchSongs = async (query: string): Promise<Song[]> => {
+    if (!token) {
+      toast.error('You need to log in with Spotify first');
+      return [];
+    }
+    
+    try {
+      const response = await search(token, query, 'track', 20);
+      return transformRecommendations(response);
+    } catch (err) {
+      console.error('Error searching songs:', err);
+      toast.error('Failed to search songs. Please try again.');
+      return [];
+    }
+  };
+
   const nextSong = () => {
     if (recommendations.length === 0 || currentSongIndex === -1) return;
     
@@ -130,7 +137,6 @@ export const useSpotifyRecommendations = (): UseRecommendationsResult => {
     setCurrentSongIndex(prevIndex);
   };
   
-  // Set current song and update index
   const setCurrentSongAndIndex = (song: Song) => {
     setCurrentSong(song);
     const index = recommendations.findIndex(s => s.id === song.id);
@@ -148,6 +154,7 @@ export const useSpotifyRecommendations = (): UseRecommendationsResult => {
     fetchRecommendations,
     setCurrentSong: setCurrentSongAndIndex,
     nextSong,
-    previousSong
+    previousSong,
+    searchSongs
   };
 };

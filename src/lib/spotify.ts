@@ -1,6 +1,6 @@
 
-const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
-const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI || window.location.origin;
+const CLIENT_ID = "76d0297900a7441a8612e9c39395db61";
+const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI || "https://feelgroove-generator.lovable.app/";
 
 const SPOTIFY_AUTHORIZE_URL = 'https://accounts.spotify.com/authorize';
 const SCOPES = [
