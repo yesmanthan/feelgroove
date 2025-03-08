@@ -95,7 +95,10 @@ const Library = () => {
             <div className="sticky top-8">
               {currentSong && (
                 <MusicPlayer 
-                  song={currentSong}
+                  song={{
+                    ...currentSong,
+                    duration: currentSong.duration || 0 // Ensure duration exists
+                  }}
                   onNext={nextSong}
                   onPrevious={previousSong}
                   onComplete={nextSong}

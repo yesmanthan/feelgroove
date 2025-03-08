@@ -25,7 +25,13 @@ export const useSongControls = (
     try {
       console.log('Searching for:', query);
       const response = await search(token, query, 'track', 20);
-      return transformRecommendations(response);
+      const songs = transformRecommendations(response);
+      
+      // Ensure all songs have a duration value (default to 0 if missing)
+      return songs.map(song => ({
+        ...song,
+        duration: song.duration || 0
+      }));
     } catch (err) {
       console.error('Error searching songs:', err);
       toast.error('Failed to search songs. Please try again.');

@@ -7,7 +7,7 @@ export interface Song {
   artist: string;
   album?: string;
   coverUrl: string;
-  duration?: number;
+  duration: number; // Changed from optional to required
   uri: string;
   previewUrl?: string | null;
   playedAt?: string;

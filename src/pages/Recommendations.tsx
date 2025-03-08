@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AnimatedBackground from '@/components/AnimatedBackground';
@@ -173,7 +172,10 @@ const Recommendations = () => {
                   {/* Current Song Player */}
                   {currentSong && (
                     <MusicPlayer 
-                      song={currentSong}
+                      song={{
+                        ...currentSong,
+                        duration: currentSong.duration || 0 // Ensure duration exists
+                      }}
                       onNext={nextSong}
                       onPrevious={previousSong}
                       onComplete={nextSong}

@@ -79,10 +79,17 @@ export const useRecommendationsFetcher = () => {
       try {
         const recentResponse = await getRecentlyPlayed(token, 10);
         const recentTracks = transformRecentlyPlayed(recentResponse);
-        setState(prev => ({ ...prev, recentlyPlayed: recentTracks }));
         
-        if (recentTracks.length > 0) {
-          seedTrack = recentTracks[0]?.id;
+        // Ensure all recently played tracks have a duration
+        const processedRecentTracks = recentTracks.map(track => ({
+          ...track,
+          duration: track.duration || 0
+        }));
+        
+        setState(prev => ({ ...prev, recentlyPlayed: processedRecentTracks }));
+        
+        if (processedRecentTracks.length > 0) {
+          seedTrack = processedRecentTracks[0]?.id;
           console.log('Using seed track from recently played:', seedTrack);
         }
       } catch (recentError) {
@@ -113,7 +120,14 @@ export const useRecommendationsFetcher = () => {
         target_tempo: moodFeatures.tempo
       });
       
-      const songs = transformRecommendations(recommendationsResponse);
+      const rawSongs = transformRecommendations(recommendationsResponse);
+      
+      // Ensure all songs have a duration value (default to 0 if missing)
+      const songs = rawSongs.map(song => ({
+        ...song,
+        duration: song.duration || 0
+      }));
+      
       console.log('Received recommendations:', songs.length);
       
       if (songs.length === 0) {
