@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Search, Disc } from 'lucide-react';
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
 import { useFavorites } from '@/hooks/useFavorites';
-import { search } from '@/lib/spotify';
+import { search } from '@/lib/spotify/tracks';
 import { Song } from '@/components/MusicPlayer';
 import { toast } from 'sonner';
 

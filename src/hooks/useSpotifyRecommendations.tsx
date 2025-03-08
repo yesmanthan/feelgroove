@@ -6,12 +6,16 @@ import { type Mood } from '@/components/MoodSelector';
 import { toast } from 'sonner';
 import { 
   getRecommendations, 
-  getAvailableGenres, 
+  getAvailableGenres 
+} from '@/lib/spotify/recommendations';
+import { 
   getRecentlyPlayed,
-  getUserPlaylists,
-  search,
-  getSavedTracks
-} from '@/lib/spotify';
+  getSavedTracks,
+  search
+} from '@/lib/spotify/tracks';
+import { 
+  getUserPlaylists 
+} from '@/lib/spotify/playlists';
 import { 
   transformRecommendations,
   transformRecentlyPlayed
