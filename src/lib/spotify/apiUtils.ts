@@ -2,11 +2,11 @@
 import { toast } from "sonner";
 
 export const BASE_URL = 'https://api.spotify.com/v1';
-const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID || "76d0297900a7441a8612e9c39395db61";
-const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI || "https://feelgroove-generator.lovable.app/";
+export const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID || "76d0297900a7441a8612e9c39395db61";
+export const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI || "https://feelgroove-generator.lovable.app/";
 
 const SPOTIFY_AUTHORIZE_URL = 'https://accounts.spotify.com/authorize';
-const SCOPES = [
+export const SCOPES = [
   'user-read-private',
   'user-read-email',
   'user-read-playback-state',

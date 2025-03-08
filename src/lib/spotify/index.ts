@@ -1,5 +1,5 @@
 
-// Re-export all Spotify API functions from their modules
+// This file re-exports all modules for easier importing
 export * from './apiUtils';
 export * from './userProfile';
 export * from './player';

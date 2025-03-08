@@ -6,7 +6,13 @@ export {
   getAccessTokenFromUrl,
   verifyState,
   isTokenExpired,
-  storeToken
+  storeToken,
+  BASE_URL,
+  CLIENT_ID,
+  REDIRECT_URI,
+  SCOPES,
+  handleResponse,
+  getHeaders
 } from './spotify/apiUtils';
 
 // Re-export all other Spotify API functions
