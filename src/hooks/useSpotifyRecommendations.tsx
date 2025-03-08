@@ -9,10 +9,14 @@ import {
   getAvailableGenres 
 } from '@/lib/spotify/recommendations';
 import { 
-  getRecentlyPlayed,
-  getSavedTracks,
   search
 } from '@/lib/spotify/tracks';
+import {
+  getRecentlyPlayed
+} from '@/lib/spotify/player';
+import {
+  getSavedTracks
+} from '@/lib/spotify/userProfile';
 import { 
   getUserPlaylists 
 } from '@/lib/spotify/playlists';
