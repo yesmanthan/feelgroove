@@ -5,6 +5,7 @@ export const BASE_URL = 'https://api.spotify.com/v1';
 export const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID || "76d0297900a7441a8612e9c39395db61";
 export const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI || "https://feelgroove-generator.lovable.app/";
 
+// Spotify authorization URL
 const SPOTIFY_AUTHORIZE_URL = 'https://accounts.spotify.com/authorize';
 export const SCOPES = [
   'user-read-private',
@@ -52,8 +53,15 @@ export const getSpotifyAuthUrl = () => {
     show_dialog: 'true' // Force the user to approve the app again
   });
 
-  console.log("Spotify Auth URL:", `${SPOTIFY_AUTHORIZE_URL}?${params.toString()}`);
-  return `${SPOTIFY_AUTHORIZE_URL}?${params.toString()}`;
+  console.log("Spotify Auth URL params:", {
+    client_id: CLIENT_ID,
+    redirect_uri: REDIRECT_URI,
+    scope: SCOPES.substring(0, 20) + '...' // Log partial scope for debugging
+  });
+  
+  const authUrl = `${SPOTIFY_AUTHORIZE_URL}?${params.toString()}`;
+  console.log("Generated Spotify Auth URL:", authUrl);
+  return authUrl;
 };
 
 export const getAccessTokenFromUrl = (): string | null => {
@@ -66,13 +74,26 @@ export const getAccessTokenFromUrl = (): string | null => {
       return initial;
     }, {});
 
-  // Verify state to prevent CSRF attacks
-  if (hash.state && !verifyState(hash.state)) {
-    console.error('State verification failed');
+  // Check for error
+  if (hash.error) {
+    console.error('Spotify authentication error:', hash.error);
+    toast.error(`Spotify authentication error: ${hash.error}`);
     return null;
   }
 
-  return hash.access_token || null;
+  // Verify state to prevent CSRF attacks
+  if (hash.state && !verifyState(hash.state)) {
+    console.error('State verification failed');
+    toast.error('Authentication failed: invalid state. Please try again.');
+    return null;
+  }
+
+  if (hash.access_token) {
+    console.log('Successfully retrieved access token from URL');
+    return hash.access_token;
+  }
+  
+  return null;
 };
 
 // Check if the token is expired (Spotify tokens last for 1 hour)
@@ -94,6 +115,8 @@ export const storeToken = (token: string): void => {
       window.location.origin
     );
   }
+  
+  console.log('Token stored successfully');
 };
 
 // Helper function to handle API responses
@@ -106,9 +129,10 @@ export const handleResponse = async (response: Response) => {
       
       if (response.status === 401) {
         // Token expired, need to refresh
+        console.error('Token expired (401 response)');
         localStorage.removeItem('spotify_token');
         localStorage.removeItem('spotify_token_timestamp');
-        toast.error('Your session has expired. Please log in again.');
+        toast.error('Your Spotify session has expired. Please log in again.');
       } else if (response.status === 429) {
         // Rate limiting
         toast.error('Too many requests to Spotify. Please try again later.');

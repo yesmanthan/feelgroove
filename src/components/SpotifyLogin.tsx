@@ -2,12 +2,24 @@
 import { Button } from '@/components/ui/button';
 import { getSpotifyAuthUrl } from '@/lib/spotify';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
 const SpotifyLogin = () => {
   const [isAttemptingLogin, setIsAttemptingLogin] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check for error in URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    
+    if (error) {
+      console.error('Login error from URL:', error);
+      setLoginError(`Spotify login error: ${error}`);
+      toast.error(`Spotify login error: ${error}`);
+    }
+  }, []);
 
   const handleLogin = () => {
     try {

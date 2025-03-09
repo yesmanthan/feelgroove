@@ -7,9 +7,31 @@ export const useSpotifyAuth = () => {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  // Function to fetch user profile
+  const fetchUserProfile = async (accessToken: string) => {
+    try {
+      const response = await fetch('https://api.spotify.com/v1/me', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch profile: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("Fetched user profile:", data);
+      setUserProfile(data);
+      return data;
+    } catch (err) {
+      console.error("Error fetching user profile:", err);
+      return null;
+    }
+  };
 
   useEffect(() => {
-    const checkForToken = () => {
+    const checkForToken = async () => {
       try {
         setError(null);
         
@@ -28,6 +50,9 @@ export const useSpotifyAuth = () => {
           // Store token with timestamp
           storeToken(tokenFromUrl);
           setToken(tokenFromUrl);
+          
+          // Fetch user profile
+          await fetchUserProfile(tokenFromUrl);
           
           // Clear the hash from the URL to avoid exposing the token
           if (window.history.replaceState) {
@@ -49,6 +74,9 @@ export const useSpotifyAuth = () => {
           } else {
             console.log('Token valid, using it');
             setToken(storedToken);
+            
+            // Fetch user profile
+            await fetchUserProfile(storedToken);
           }
         } else {
           console.log('No token found');
@@ -64,10 +92,11 @@ export const useSpotifyAuth = () => {
     checkForToken();
     
     // Event listener for storage changes (in case user logs in via another tab)
-    const handleStorageChange = (e: StorageEvent) => {
+    const handleStorageChange = async (e: StorageEvent) => {
       if (e.key === 'spotify_token' && e.newValue) {
         setToken(e.newValue);
         setError(null);
+        await fetchUserProfile(e.newValue);
       }
     };
     
@@ -82,8 +111,9 @@ export const useSpotifyAuth = () => {
     localStorage.removeItem('spotify_token');
     localStorage.removeItem('spotify_token_timestamp');
     setToken(null);
+    setUserProfile(null);
     toast.info('Logged out from Spotify');
   };
 
-  return { token, loading, error, logout };
+  return { token, loading, error, userProfile, logout, fetchUserProfile };
 };

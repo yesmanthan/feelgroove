@@ -5,8 +5,6 @@ import * as faceapi from '@vladmandic/face-api';
 import { toast } from 'sonner';
 import { type Mood } from '@/components/MoodSelector';
 
-const MODEL_URL = '/models';
-
 // Expression to mood mapping
 export const expressionToMood: Record<string, Mood> = {
   happy: 'happy',
@@ -57,8 +55,25 @@ export const useFaceDetection = ({ onMoodDetected }: UseFaceDetectionProps): Use
         setModelLoadingError(null);
         await tf.ready();
         
+        // Define the model URL based on environment (local vs. production)
+        const isLocalhost = window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1';
+        
+        const MODEL_URL = isLocalhost ? '/models' : '/models';
+        
         // Log model URL for debugging
         console.log('Loading models from:', MODEL_URL);
+        
+        // Check if models are accessible
+        try {
+          const testFetch = await fetch(`${MODEL_URL}/tiny_face_detector_model-weights_manifest.json`);
+          if (!testFetch.ok) {
+            throw new Error(`Models not accessible (status ${testFetch.status})`);
+          }
+        } catch (fetchError) {
+          console.error('Error checking model accessibility:', fetchError);
+          throw new Error(`Models not accessible: ${fetchError}`);
+        }
         
         // Load all required models
         const modelLoadPromises = [
@@ -77,7 +92,9 @@ export const useFaceDetection = ({ onMoodDetected }: UseFaceDetectionProps): Use
       } catch (error) {
         console.error('Error loading models:', error);
         setIsModelLoading(false);
-        setModelLoadingError('Failed to load face detection models. Please ensure the model files are available.');
+        setModelLoadingError(
+          'Failed to load face detection models. Please ensure the model files are available in the /public/models directory.'
+        );
         toast.error('Failed to load face detection models');
       }
     };
