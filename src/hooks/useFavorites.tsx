@@ -23,23 +23,30 @@ export const useFavorites = () => {
   const queryClient = useQueryClient();
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 
-  // Fetch user favorites
+  // Fetch user favorites with optimized settings
   const { data: favorites, isLoading } = useQuery({
     queryKey: ['favorites'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('favorites')
-        .select('*')
-        .order('added_at', { ascending: false });
+      console.log('Fetching favorites from Supabase');
+      try {
+        const { data, error } = await supabase
+          .from('favorites')
+          .select('*')
+          .order('added_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching favorites:', error);
-        throw new Error('Failed to fetch favorites');
+        if (error) {
+          console.error('Error fetching favorites:', error);
+          throw new Error('Failed to fetch favorites');
+        }
+
+        return data as FavoriteItem[];
+      } catch (err) {
+        console.error('Exception fetching favorites:', err);
+        throw err;
       }
-
-      return data as FavoriteItem[];
     },
     enabled: !!token, // Only run if user is authenticated
+    staleTime: 5 * 60 * 1000, // 5 minutes, will be overridden by real-time updates
   });
 
   // Update favoriteIds set when favorites change
@@ -49,29 +56,39 @@ export const useFavorites = () => {
     }
   }, [favorites]);
 
-  // Add song to favorites
+  // Add song to favorites with improved error handling
   const addToFavoritesMutation = useMutation({
     mutationFn: async (song: Song) => {
-      const { data, error } = await supabase
-        .from('favorites')
-        .insert({
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          song_id: song.id,
-          song_title: song.title,
-          artist: song.artist,
-          album: song.album,
-          cover_url: song.coverUrl,
-          spotify_uri: song.uri || '',
-        })
-        .select()
-        .single();
+      try {
+        const userData = await supabase.auth.getUser();
+        if (!userData.data.user) {
+          throw new Error('User not authenticated');
+        }
 
-      if (error) {
-        console.error('Error adding to favorites:', error);
-        throw new Error('Failed to add to favorites');
+        const { data, error } = await supabase
+          .from('favorites')
+          .insert({
+            user_id: userData.data.user.id,
+            song_id: song.id,
+            song_title: song.title,
+            artist: song.artist,
+            album: song.album,
+            cover_url: song.coverUrl,
+            spotify_uri: song.uri || '',
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error adding to favorites:', error);
+          throw new Error('Failed to add to favorites');
+        }
+
+        return data;
+      } catch (err) {
+        console.error('Exception adding to favorites:', err);
+        throw err;
       }
-
-      return data;
     },
     onSuccess: () => {
       toast.success('Added to favorites');
@@ -82,20 +99,25 @@ export const useFavorites = () => {
     },
   });
 
-  // Remove song from favorites
+  // Remove song from favorites with improved error handling
   const removeFromFavoritesMutation = useMutation({
     mutationFn: async (songId: string) => {
-      const { error } = await supabase
-        .from('favorites')
-        .delete()
-        .eq('song_id', songId);
+      try {
+        const { error } = await supabase
+          .from('favorites')
+          .delete()
+          .eq('song_id', songId);
 
-      if (error) {
-        console.error('Error removing from favorites:', error);
-        throw new Error('Failed to remove from favorites');
+        if (error) {
+          console.error('Error removing from favorites:', error);
+          throw new Error('Failed to remove from favorites');
+        }
+
+        return songId;
+      } catch (err) {
+        console.error('Exception removing from favorites:', err);
+        throw err;
       }
-
-      return songId;
     },
     onSuccess: (songId) => {
       toast.info('Removed from favorites');
