@@ -127,7 +127,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      enable_realtime: {
+        Args: {
+          table_name: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

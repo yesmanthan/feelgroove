@@ -10,12 +10,16 @@ export const useSupabaseRealtime = () => {
   useEffect(() => {
     // Enable realtime first
     const enableRealtimeQuery = async () => {
-      await supabase.rpc('enable_realtime', { table: 'favorites' });
-      await supabase.rpc('enable_realtime', { table: 'playlists' });
-      await supabase.rpc('enable_realtime', { table: 'playlist_songs' });
+      try {
+        await supabase.rpc('enable_realtime', { table: 'favorites' });
+        await supabase.rpc('enable_realtime', { table: 'playlists' });
+        await supabase.rpc('enable_realtime', { table: 'playlist_songs' });
+      } catch (error) {
+        console.error('Error enabling realtime:', error);
+      }
     };
     
-    enableRealtimeQuery().catch(console.error);
+    enableRealtimeQuery();
 
     // Subscribe to changes in favorites
     const favoritesChannel = supabase
