@@ -34,6 +34,11 @@
       padding: 1rem;
       margin: 1rem 0;
     }
+    .success {
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+      color: #155724;
+    }
     .button {
       display: inline-block;
       background-color: #007bff;
@@ -49,13 +54,30 @@
       border-radius: 0.5rem;
       margin: 1rem 0;
     }
+    #status {
+      margin-top: 2rem;
+    }
+    .file-status {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.5rem 1rem;
+    }
+    .file-status span:nth-child(odd) {
+      font-family: monospace;
+    }
+    .missing {
+      color: #dc3545;
+    }
+    .present {
+      color: #28a745;
+    }
   </style>
 </head>
 <body>
   <h1>Face API Models</h1>
   
-  <div class="alert">
-    <strong>Model files are missing!</strong> This directory should contain the face-api.js model files.
+  <div class="alert" id="mainAlert">
+    <strong>Checking model files...</strong> Please wait while we check if all required model files are present.
   </div>
   
   <p>
@@ -66,17 +88,9 @@
   <h2>Required Model Files</h2>
   
   <div class="file-list">
-    <ul>
-      <li>tiny_face_detector_model-shard1</li>
-      <li>tiny_face_detector_model-weights_manifest.json</li>
-      <li>face_expression_model-shard1</li>
-      <li>face_expression_model-weights_manifest.json</li>
-      <li>face_landmark_68_model-shard1</li>
-      <li>face_landmark_68_model-weights_manifest.json</li>
-      <li>face_recognition_model-shard1</li>
-      <li>face_recognition_model-shard2</li>
-      <li>face_recognition_model-weights_manifest.json</li>
-    </ul>
+    <div class="file-status" id="fileStatus">
+      <!-- Will be populated by JavaScript -->
+    </div>
   </div>
   
   <h2>Download Instructions</h2>
@@ -96,5 +110,65 @@ cp -r face-api/model/* /path/to/your/project/public/models/</code></pre>
       (public/models/) for the face detection to work properly.
     </p>
   </div>
+
+  <script>
+    const requiredFiles = [
+      'tiny_face_detector_model-shard1',
+      'tiny_face_detector_model-weights_manifest.json',
+      'face_expression_model-shard1',
+      'face_expression_model-weights_manifest.json',
+      'face_landmark_68_model-shard1',
+      'face_landmark_68_model-weights_manifest.json',
+      'face_recognition_model-shard1',
+      'face_recognition_model-shard2',
+      'face_recognition_model-weights_manifest.json'
+    ];
+    
+    const fileStatusElement = document.getElementById('fileStatus');
+    const mainAlertElement = document.getElementById('mainAlert');
+    let missingCount = 0;
+    
+    // Check file existence and update UI
+    async function checkFiles() {
+      for (const file of requiredFiles) {
+        const fileSpan = document.createElement('span');
+        fileSpan.textContent = file;
+        
+        const statusSpan = document.createElement('span');
+        statusSpan.textContent = 'Checking...';
+        
+        fileStatusElement.appendChild(fileSpan);
+        fileStatusElement.appendChild(statusSpan);
+        
+        try {
+          const response = await fetch(`./${file}`);
+          if (response.ok) {
+            statusSpan.textContent = '✓ Present';
+            statusSpan.className = 'present';
+          } else {
+            statusSpan.textContent = '✗ Missing';
+            statusSpan.className = 'missing';
+            missingCount++;
+          }
+        } catch (err) {
+          statusSpan.textContent = '✗ Missing';
+          statusSpan.className = 'missing';
+          missingCount++;
+        }
+      }
+      
+      // Update main alert
+      if (missingCount === 0) {
+        mainAlertElement.textContent = '✓ All model files are present! The face detection should work properly.';
+        mainAlertElement.className = 'alert success';
+      } else {
+        mainAlertElement.innerHTML = `<strong>Missing ${missingCount} model files!</strong> Please download the missing files using the instructions below.`;
+        mainAlertElement.className = 'alert';
+      }
+    }
+    
+    // Run check when page loads
+    checkFiles();
+  </script>
 </body>
 </html>

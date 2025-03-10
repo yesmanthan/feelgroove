@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AlertTriangle, Download } from 'lucide-react';
+import { AlertTriangle, Download, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ModelStatusProps {
@@ -23,15 +23,26 @@ const ModelStatus: React.FC<ModelStatusProps> = ({
           <p className="text-xs mt-1">
             You need to download the face detection models to the /public/models directory.
           </p>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="mt-2 text-xs flex items-center gap-1"
-            onClick={openModelDownloadLink}
-          >
-            <Download size={14} />
-            Download Models
-          </Button>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-xs flex items-center gap-1"
+              onClick={openModelDownloadLink}
+            >
+              <Download size={14} />
+              Download Models
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="text-xs flex items-center gap-1"
+              onClick={() => window.location.reload()}
+            >
+              <RefreshCw size={14} />
+              Reload Page
+            </Button>
+          </div>
         </div>
       </div>
     );
