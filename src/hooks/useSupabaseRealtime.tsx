@@ -11,9 +11,9 @@ export const useSupabaseRealtime = () => {
     // Enable realtime first
     const enableRealtimeQuery = async () => {
       try {
-        await supabase.rpc('enable_realtime', { table: 'favorites' });
-        await supabase.rpc('enable_realtime', { table: 'playlists' });
-        await supabase.rpc('enable_realtime', { table: 'playlist_songs' });
+        await supabase.rpc('enable_realtime', { table_name: 'favorites' });
+        await supabase.rpc('enable_realtime', { table_name: 'playlists' });
+        await supabase.rpc('enable_realtime', { table_name: 'playlist_songs' });
       } catch (error) {
         console.error('Error enabling realtime:', error);
       }
