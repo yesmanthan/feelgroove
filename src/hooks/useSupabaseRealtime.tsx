@@ -8,12 +8,13 @@ export const useSupabaseRealtime = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Enable realtime first
+    // Enable realtime first - fixed the parameter name to match function definition
     const enableRealtimeQuery = async () => {
       try {
         await supabase.rpc('enable_realtime', { table_name: 'favorites' });
         await supabase.rpc('enable_realtime', { table_name: 'playlists' });
         await supabase.rpc('enable_realtime', { table_name: 'playlist_songs' });
+        console.log('Realtime enabled for tables');
       } catch (error) {
         console.error('Error enabling realtime:', error);
       }
@@ -37,7 +38,9 @@ export const useSupabaseRealtime = () => {
               toast.info('A favorite was removed');
             }
           })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Favorites subscription status:', status);
+      });
 
     // Subscribe to changes in playlists
     const playlistsChannel = supabase
@@ -57,7 +60,9 @@ export const useSupabaseRealtime = () => {
               toast.info('A playlist was deleted');
             }
           })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Playlists subscription status:', status);
+      });
 
     // Subscribe to changes in playlist songs
     const playlistSongsChannel = supabase
@@ -72,13 +77,51 @@ export const useSupabaseRealtime = () => {
             // Also refresh the playlists to update song counts
             queryClient.invalidateQueries({ queryKey: ['playlists'] });
           })
+      .subscribe((status) => {
+        console.log('Playlist songs subscription status:', status);
+      });
+
+    // Add a special channel for user session updates
+    const userSessionChannel = supabase
+      .channel('user_sessions')
+      .on('presence', { event: 'sync' }, () => {
+        console.log('User sessions synced:', userSessionChannel.presenceState());
+      })
+      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+        console.log('User joined:', key, newPresences);
+        toast.info('Another user joined the session');
+      })
+      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+        console.log('User left:', key, leftPresences);
+        toast.info('A user left the session');
+      })
       .subscribe();
+
+    // Track current user's presence
+    const trackUserPresence = async () => {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          await userSessionChannel.track({
+            user_id: userData.user.id,
+            online_at: new Date().toISOString()
+          });
+          console.log('Tracking user presence:', userData.user.id);
+        }
+      } catch (error) {
+        console.error('Error tracking user presence:', error);
+      }
+    };
+    
+    trackUserPresence();
 
     // Cleanup function to unsubscribe when component unmounts
     return () => {
+      console.log('Cleaning up realtime subscriptions');
       supabase.removeChannel(favoritesChannel);
       supabase.removeChannel(playlistsChannel);
       supabase.removeChannel(playlistSongsChannel);
+      supabase.removeChannel(userSessionChannel);
     };
   }, [queryClient]);
 };

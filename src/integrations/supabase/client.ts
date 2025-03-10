@@ -15,13 +15,31 @@ export const supabase = createClient<Database>(
   {
     realtime: {
       params: {
-        eventsPerSecond: 10
+        eventsPerSecond: 20,  // Increased from 10 to handle more events
+        fastStart: true       // For more responsive initial setup
       }
     },
     auth: {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true
+    },
+    db: {
+      schema: 'public'
+    },
+    global: {
+      fetch: (...args) => {
+        // Add retries for network resilience
+        return fetch(...args).catch(error => {
+          console.error('Supabase fetch error:', error);
+          // Try once more after short delay
+          return new Promise(resolve => setTimeout(resolve, 1000))
+            .then(() => fetch(...args));
+        });
+      },
+      headers: {
+        'X-Client-Info': 'feelgroove-app'
+      }
     }
   }
 );
