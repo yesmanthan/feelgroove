@@ -28,13 +28,13 @@ export const supabase = createClient<Database>(
       schema: 'public'
     },
     global: {
-      fetch: (...args) => {
+      fetch: (url, options) => {
         // Add retries for network resilience
-        return fetch(...args).catch(error => {
+        return fetch(url, options).catch(error => {
           console.error('Supabase fetch error:', error);
           // Try once more after short delay
           return new Promise(resolve => setTimeout(resolve, 1000))
-            .then(() => fetch(...args));
+            .then(() => fetch(url, options));
         });
       },
       headers: {

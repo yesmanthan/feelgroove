@@ -8,7 +8,7 @@ export const useSupabaseRealtime = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Enable realtime first - fixed the parameter name to match function definition
+    // Enable realtime for tables - using proper parameter name
     const enableRealtimeQuery = async () => {
       try {
         await supabase.rpc('enable_realtime', { table_name: 'favorites' });
