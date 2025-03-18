@@ -21,17 +21,23 @@ export const getSoundCloudStreamUrl = async (options: SoundCloudStreamOptions): 
     });
     
     if (!response.ok) {
-      throw new Error(`SoundCloud API error: ${response.status}`);
+      const errorData = await response.json();
+      console.error('SoundCloud API error response:', errorData);
+      throw new Error(`SoundCloud API error: ${response.status} - ${errorData.errors ? errorData.errors[0] : 'Unknown error'}`);
     }
     
     const data = await response.json();
     console.log('SoundCloud stream response:', data);
     
-    if (!data.url) {
+    if (data.hasError) {
+      throw new Error(`SoundCloud API error: ${data.errors ? data.errors[0] : 'Unknown error'}`);
+    }
+    
+    if (!data.url && !data.streamUrl) {
       throw new Error('No stream URL returned from SoundCloud API');
     }
     
-    return data.url;
+    return data.url || data.streamUrl;
   } catch (error) {
     console.error('Error fetching SoundCloud stream:', error);
     throw error;

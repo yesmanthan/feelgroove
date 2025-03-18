@@ -6,18 +6,27 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { useSoundCloudPlayer, SoundCloudTrack } from '@/hooks/useSoundCloudPlayer';
 import { toast } from 'sonner';
+import { InfoIcon } from 'lucide-react';
 
 interface SoundCloudTrackFormProps {
   onTrackPlay: (track: SoundCloudTrack) => void;
 }
 
+// Sample track data for user testing
+const SAMPLE_TRACK = {
+  streamId: 'soundcloud:tracks:1479458126',
+  trackAuthorization: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJnZW8iOiJVUyIsInN1YiI6IiIsInJpZCI6IjkxZjRlNjY0LTQwZTItNDFlOS04OWY0LTVmN2YzZGQyY2MxMCIsImlhdCI6MTcxNTUzMzAyNH0._E0eLOLfwZ3h8yn_4_bHn_UQbmtTIxgzhZNJX-pPEpQ',
+  title: 'Sample SoundCloud Track',
+  artist: 'SoundCloud Artist'
+};
+
 const SoundCloudTrackForm: React.FC<SoundCloudTrackFormProps> = ({ onTrackPlay }) => {
   const { rapidApiKey, setRapidApiKey, isLoading } = useSoundCloudPlayer();
   
   const [trackDetails, setTrackDetails] = useState<SoundCloudTrack>({
-    streamId: 'soundcloud%3Atracks%3A1579438050%2F8056abc1-6c02-4517-ba23-8e2c19f33485%2Fstream%2Fhls',
-    trackAuthorization: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJnZW8iOiJVUyIsInN1YiI6IiIsInJpZCI6IjkxZjRlNjY0LTQwZTItNDFlOS04OWY0LTVmN2YzZGQyY2MxMCIsImlhdCI6MTcxNTUzMzAyNH0._E0eLOLfwZ3h8yn_4_bHn_UQbmtTIxgzhZNJX-pPEpQ',
-    title: 'SoundCloud Demo Track',
+    streamId: '',
+    trackAuthorization: '',
+    title: 'SoundCloud Track',
     artist: 'SoundCloud Artist',
     coverUrl: ''
   });
@@ -41,6 +50,14 @@ const SoundCloudTrackForm: React.FC<SoundCloudTrackFormProps> = ({ onTrackPlay }
     }
     
     onTrackPlay(trackDetails);
+  };
+  
+  const loadSampleTrack = () => {
+    setTrackDetails({
+      ...SAMPLE_TRACK,
+      coverUrl: trackDetails.coverUrl
+    });
+    toast.info('Sample track loaded into form');
   };
   
   return (
@@ -69,17 +86,34 @@ const SoundCloudTrackForm: React.FC<SoundCloudTrackFormProps> = ({ onTrackPlay }
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="streamId" className="text-sm font-medium">
-              Stream ID
-            </label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="streamId" className="text-sm font-medium">
+                Stream ID
+              </label>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                onClick={loadSampleTrack}
+                className="text-xs"
+              >
+                Load Sample Track
+              </Button>
+            </div>
             <Textarea
               id="streamId"
               name="streamId"
               value={trackDetails.streamId}
               onChange={handleInputChange}
-              placeholder="Enter SoundCloud streamId"
+              placeholder="Enter SoundCloud streamId (e.g., soundcloud:tracks:1234567890)"
               className="font-mono text-xs h-20"
             />
+            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <InfoIcon size={14} className="mt-0.5 shrink-0" />
+              <p>
+                The streamId should be in the format: soundcloud:tracks:1234567890
+              </p>
+            </div>
           </div>
           
           <div className="space-y-2">
@@ -91,9 +125,15 @@ const SoundCloudTrackForm: React.FC<SoundCloudTrackFormProps> = ({ onTrackPlay }
               name="trackAuthorization"
               value={trackDetails.trackAuthorization}
               onChange={handleInputChange}
-              placeholder="Enter SoundCloud trackAuthorization"
+              placeholder="Enter SoundCloud JWT authorization token"
               className="font-mono text-xs h-20"
             />
+            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <InfoIcon size={14} className="mt-0.5 shrink-0" />
+              <p>
+                The authorization token is a JWT string that starts with "eyJ0eXAi..."
+              </p>
+            </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">

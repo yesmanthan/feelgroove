@@ -33,11 +33,21 @@ export const useSoundCloudPlayer = () => {
     try {
       setIsLoading(true);
       
+      if (!track.streamId || !track.trackAuthorization) {
+        toast.error('Missing required track information');
+        return null;
+      }
+      
       const streamUrl = await getSoundCloudStreamUrl({
         streamId: track.streamId,
         trackAuthorization: track.trackAuthorization,
         rapidApiKey
       });
+      
+      if (!streamUrl) {
+        toast.error('Could not retrieve stream URL from SoundCloud');
+        return null;
+      }
       
       const songData: Song = {
         id: track.streamId,
@@ -53,7 +63,13 @@ export const useSoundCloudPlayer = () => {
       return songData;
     } catch (error) {
       console.error('Error playing SoundCloud track:', error);
-      toast.error('Failed to load track from SoundCloud');
+      
+      if (error instanceof Error) {
+        toast.error(`Failed to load track: ${error.message}`);
+      } else {
+        toast.error('Failed to load track from SoundCloud');
+      }
+      
       return null;
     } finally {
       setIsLoading(false);
