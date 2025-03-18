@@ -16,7 +16,7 @@ export const useFaceDetection = ({ onMoodDetected }: UseFaceDetectionProps): Use
   const [detectedExpression, setDetectedExpression] = useState<string | null>(null);
   
   // Custom hooks for camera and model
-  const { isModelLoaded, isModelLoading, modelLoadingError, loadModels, openModelDownloadLink } = useModelLoader();
+  const { isModelLoaded, isModelLoading, modelLoadingError, loadModels } = useModelLoader();
   const { isCameraActive, cameraError, startCamera: startCameraStream, stopCamera: stopCameraStream, setIsCameraActive } = useCameraControls();
   
   // Start camera
@@ -128,6 +128,8 @@ export const useFaceDetection = ({ onMoodDetected }: UseFaceDetectionProps): Use
     }
   };
   
+  // We removed the destructured openModelDownloadLink from useModelLoader
+  // as it doesn't exist in that hook's return type
   return {
     videoRef,
     canvasRef,
@@ -141,6 +143,6 @@ export const useFaceDetection = ({ onMoodDetected }: UseFaceDetectionProps): Use
     startCamera,
     stopCamera,
     analyzeMood,
-    openModelDownloadLink
+    // We're removing openModelDownloadLink from the return type since it doesn't exist
   };
 };

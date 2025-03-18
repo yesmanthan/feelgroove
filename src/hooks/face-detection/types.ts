@@ -1,15 +1,15 @@
 
 import { type Mood } from '@/components/MoodSelector';
+import { RefObject } from 'react';
 
-// Expression to mood mapping
 export const expressionToMood: Record<string, Mood> = {
   happy: 'happy',
   sad: 'sad',
   angry: 'energetic',
-  fearful: 'energetic',
-  disgusted: 'energetic',
   surprised: 'energetic',
-  neutral: 'relaxed',
+  fearful: 'relaxed',
+  disgusted: 'energetic',
+  neutral: 'relaxed'
 };
 
 export interface UseFaceDetectionProps {
@@ -17,17 +17,17 @@ export interface UseFaceDetectionProps {
 }
 
 export interface UseFaceDetectionReturn {
-  videoRef: React.RefObject<HTMLVideoElement>;
-  canvasRef: React.RefObject<HTMLCanvasElement>;
+  videoRef: RefObject<HTMLVideoElement>;
+  canvasRef: RefObject<HTMLCanvasElement>;
   isModelLoaded: boolean;
   isModelLoading: boolean;
   isCameraActive: boolean;
   isAnalyzing: boolean;
   cameraError: string | null;
   detectedExpression: string | null;
-  modelLoadingError: string | null;
+  modelLoadingError: string;
   startCamera: () => Promise<void>;
   stopCamera: () => void;
   analyzeMood: () => Promise<void>;
-  openModelDownloadLink: () => void;
+  // Removed openModelDownloadLink from the return type
 }
