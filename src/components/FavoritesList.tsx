@@ -6,7 +6,7 @@ import { Disc } from 'lucide-react';
 import { Song } from '@/components/MusicPlayer';
 
 interface FavoritesListProps {
-  onSelectSong: (songId: string) => void;
+  onSelectSong?: (songId: string) => void;
 }
 
 const FavoritesList = ({ onSelectSong }: FavoritesListProps) => {
@@ -24,7 +24,7 @@ const FavoritesList = ({ onSelectSong }: FavoritesListProps) => {
     return (
       <div className="text-center py-8">
         <p className="text-muted-foreground mb-4">You haven't added any favorites yet.</p>
-        <p className="text-sm">Search for songs and click the heart icon to add them to your favorites.</p>
+        <p className="text-sm">Your favorites will appear here.</p>
       </div>
     );
   }
@@ -49,7 +49,7 @@ const FavoritesList = ({ onSelectSong }: FavoritesListProps) => {
           <div 
             key={favorite.id}
             className="flex items-center p-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
-            onClick={() => onSelectSong(song.id)}
+            onClick={() => onSelectSong && onSelectSong(song.id)}
           >
             <div className="w-12 h-12 rounded overflow-hidden mr-4 flex-shrink-0">
               {song.coverUrl ? (

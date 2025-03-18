@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useSpotifyAuth } from './useSpotifyAuth';
 import { toast } from 'sonner';
 import { type Song } from '@/components/MusicPlayer';
 
@@ -19,7 +18,6 @@ type FavoriteItem = {
 };
 
 export const useFavorites = () => {
-  const { token } = useSpotifyAuth();
   const queryClient = useQueryClient();
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 
@@ -45,7 +43,6 @@ export const useFavorites = () => {
         throw err;
       }
     },
-    enabled: !!token, // Only run if user is authenticated
     staleTime: 5 * 60 * 1000, // 5 minutes, will be overridden by real-time updates
   });
 
@@ -119,7 +116,7 @@ export const useFavorites = () => {
         throw err;
       }
     },
-    onSuccess: (songId) => {
+    onSuccess: () => {
       toast.info('Removed from favorites');
       queryClient.invalidateQueries({ queryKey: ['favorites'] });
     },
@@ -129,11 +126,6 @@ export const useFavorites = () => {
   });
 
   const toggleFavorite = (song: Song) => {
-    if (!token) {
-      toast.error('Please log in to save favorites');
-      return;
-    }
-
     if (favoriteIds.has(song.id)) {
       removeFromFavoritesMutation.mutate(song.id);
     } else {

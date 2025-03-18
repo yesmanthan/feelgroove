@@ -1,73 +1,22 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import { type Mood } from '@/components/MoodSelector';
-import RecentlyPlayed from '@/components/RecentlyPlayed';
-import { useSpotifyRecommendations } from '@/hooks/useSpotifyRecommendations';
-import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
-import { toast } from 'sonner';
-
-// Import refactored components
-import SpotifyLoginPrompt from '@/components/recommendations/SpotifyLoginPrompt';
+import { CardGlass, CardGlassTitle, CardGlassDescription } from '@/components/ui/card-glass';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 import RecommendationsHeader from '@/components/recommendations/RecommendationsHeader';
-import MusicPlayerCard from '@/components/recommendations/MusicPlayerCard';
-import RecommendationsList from '@/components/recommendations/RecommendationsList';
+import MusicPlayer from '@/components/MusicPlayer';
 
 const Recommendations = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
   const mood = queryParams.get('mood') as Mood || 'relaxed';
-  const { token } = useSpotifyAuth();
-  
-  const {
-    loading,
-    recommendations,
-    recentlyPlayed,
-    currentSong,
-    fetchRecommendations,
-    setCurrentSong,
-    nextSong,
-    previousSong
-  } = useSpotifyRecommendations();
-  
-  useEffect(() => {
-    if (token && mood) {
-      fetchRecommendations(mood);
-    }
-  }, [token, mood, fetchRecommendations]);
   
   const handleBack = () => {
     navigate('/');
-  };
-  
-  const handleSongSelect = (songId: string) => {
-    const song = recommendations.find(s => s.id === songId);
-    if (song) {
-      setCurrentSong(song);
-    } else {
-      // If not in recommendations, check recently played
-      const recentSong = recentlyPlayed.find(s => s.id === songId);
-      if (recentSong) {
-        setCurrentSong(recentSong);
-      }
-    }
-  };
-  
-  const handlePlayAll = () => {
-    if (recommendations.length > 0) {
-      setCurrentSong(recommendations[0]);
-      toast.success('Playing all songs');
-    }
-  };
-  
-  const handleShuffle = () => {
-    if (recommendations.length > 0) {
-      const randomIndex = Math.floor(Math.random() * recommendations.length);
-      setCurrentSong(recommendations[randomIndex]);
-      toast.success('Shuffling songs');
-    }
   };
   
   const getMoodName = (moodKey: Mood): string => {
@@ -81,19 +30,6 @@ const Recommendations = () => {
     };
     return names[moodKey] || 'Unknown';
   };
-  
-  if (!token) {
-    return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 relative">
-        <AnimatedBackground mood={mood} />
-        <SpotifyLoginPrompt 
-          mood={mood} 
-          onBack={handleBack}
-          getMoodName={getMoodName}
-        />
-      </div>
-    );
-  }
   
   return (
     <div className="min-h-screen w-full flex flex-col p-4 md:p-8 relative">
@@ -109,39 +45,97 @@ const Recommendations = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Music Player Section */}
           <div className="animate-fade-in">
-            <MusicPlayerCard
-              loading={loading}
-              recommendations={recommendations}
-              currentSong={currentSong}
-              mood={mood}
-              getMoodName={getMoodName}
-              onPlayAll={handlePlayAll}
-              onShuffle={handleShuffle}
-              onNext={nextSong}
-              onPrevious={previousSong}
-            />
-            
-            {/* Recently Played */}
-            {!loading && recentlyPlayed.length > 0 && (
-              <RecentlyPlayed 
-                songs={recentlyPlayed} 
-                onSongSelect={handleSongSelect} 
-                className="animate-fade-in animation-delay-300"
-              />
-            )}
+            <CardGlass className="mb-6">
+              <CardGlassTitle className="mb-4 text-xl">
+                {`${getMoodName(mood)} Music for You`}
+              </CardGlassTitle>
+              
+              <CardGlassDescription className="mb-6">
+                We currently don't have any streaming options available. Please try the SoundCloud player.
+              </CardGlassDescription>
+              
+              <div className="flex flex-col items-center gap-4 py-8">
+                <Button
+                  onClick={() => navigate('/soundcloud')}
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white hover:text-white"
+                >
+                  Go to SoundCloud Player
+                </Button>
+                
+                <Button variant="outline" onClick={handleBack}>
+                  Back to Home
+                </Button>
+              </div>
+            </CardGlass>
           </div>
           
-          {/* Playlist Section */}
+          {/* Information Section */}
           <div className="animate-fade-in animation-delay-200">
-            <RecommendationsList 
-              loading={loading}
-              recommendations={recommendations}
-              currentSong={currentSong}
-              mood={mood}
-              getMoodName={getMoodName}
-              onSongSelect={handleSongSelect}
-              onFetchRecommendations={fetchRecommendations}
-            />
+            <CardGlass>
+              <CardGlassTitle className="mb-6 text-xl">
+                About Mood-Based Music
+              </CardGlassTitle>
+              
+              <CardGlassDescription>
+                <p className="mb-4">
+                  Music has a profound effect on our emotions. Different genres and tempos can help enhance or change your current mood.
+                </p>
+                
+                <p className="mb-4">
+                  For your {getMoodName(mood).toLowerCase()} mood, we would typically recommend:
+                </p>
+                
+                <ul className="list-disc pl-5 mb-4 space-y-2">
+                  {mood === 'happy' && (
+                    <>
+                      <li>Upbeat pop songs with major keys</li>
+                      <li>Dance music with energetic rhythms</li>
+                      <li>Positive and uplifting lyrics</li>
+                    </>
+                  )}
+                  
+                  {mood === 'sad' && (
+                    <>
+                      <li>Slower songs in minor keys</li>
+                      <li>Acoustic and piano-focused pieces</li>
+                      <li>Emotional vocals with reflective lyrics</li>
+                    </>
+                  )}
+                  
+                  {mood === 'energetic' && (
+                    <>
+                      <li>Fast-tempo electronic dance music</li>
+                      <li>High-energy rock and metal</li>
+                      <li>Workout and motivation playlists</li>
+                    </>
+                  )}
+                  
+                  {mood === 'relaxed' && (
+                    <>
+                      <li>Ambient and chill electronic music</li>
+                      <li>Soft acoustic and indie folk</li>
+                      <li>Nature sounds and instrumental pieces</li>
+                    </>
+                  )}
+                  
+                  {mood === 'focused' && (
+                    <>
+                      <li>Classical music and film scores</li>
+                      <li>Lo-fi beats and minimal electronics</li>
+                      <li>Instrumental music without distracting lyrics</li>
+                    </>
+                  )}
+                  
+                  {mood === 'romantic' && (
+                    <>
+                      <li>Smooth R&B and soul music</li>
+                      <li>Jazz standards and ballads</li>
+                      <li>Acoustic love songs</li>
+                    </>
+                  )}
+                </ul>
+              </CardGlassDescription>
+            </CardGlass>
           </div>
         </div>
       </div>
