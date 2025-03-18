@@ -53,7 +53,7 @@ const SoundCloudTrackForm: React.FC<SoundCloudTrackFormProps> = ({ onTrackPlay }
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="apiKey" className="text-sm font-medium">
-              RapidAPI Key
+              RapidAPI Key (Pre-filled)
             </label>
             <Input
               id="apiKey"
@@ -63,6 +63,9 @@ const SoundCloudTrackForm: React.FC<SoundCloudTrackFormProps> = ({ onTrackPlay }
               placeholder="Enter your RapidAPI key"
               className="font-mono text-sm"
             />
+            <p className="text-xs text-muted-foreground">
+              This field has been pre-filled with your API key
+            </p>
           </div>
           
           <div className="space-y-2">

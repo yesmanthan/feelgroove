@@ -16,7 +16,7 @@ export const getSoundCloudStreamUrl = async (options: SoundCloudStreamOptions): 
       method: 'GET',
       headers: {
         'x-rapidapi-host': 'soundcloud-api3.p.rapidapi.com',
-        'x-rapidapi-key': rapidApiKey
+        'x-rapidapi-key': rapidApiKey || '88da990a60mshf135c8a428b372ap1f3e67jsn5f9cae09aadc'
       }
     });
     

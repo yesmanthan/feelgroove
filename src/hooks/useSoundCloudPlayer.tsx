@@ -15,7 +15,9 @@ interface SoundCloudTrack {
 export const useSoundCloudPlayer = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<Song | null>(null);
-  const [rapidApiKey, setRapidApiKey] = useState(localStorage.getItem('soundcloud_api_key') || '');
+  const [rapidApiKey, setRapidApiKey] = useState(
+    localStorage.getItem('soundcloud_api_key') || '88da990a60mshf135c8a428b372ap1f3e67jsn5f9cae09aadc'
+  );
   
   const saveRapidApiKey = (key: string) => {
     localStorage.setItem('soundcloud_api_key', key);
