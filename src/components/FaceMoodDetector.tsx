@@ -1,19 +1,20 @@
 
-import React from 'react';
-import { CardGlass } from './ui/card-glass';
+import React, { useEffect } from 'react';
 import { useFaceDetection } from '@/hooks/useFaceDetection';
-import { Mood } from './MoodSelector';
+import { type Mood } from './MoodSelector';
+import { CardGlass, CardGlassContent, CardGlassHeader, CardGlassTitle } from './ui/card-glass';
+import { Button } from './ui/button';
 import CameraView from './mood-detector/CameraView';
-import ModelStatus from './mood-detector/ModelStatus';
 import CameraControls from './mood-detector/CameraControls';
+import ModelStatus from './mood-detector/ModelStatus';
 
 interface FaceMoodDetectorProps {
   onMoodDetected: (mood: Mood) => void;
 }
 
 const FaceMoodDetector: React.FC<FaceMoodDetectorProps> = ({ onMoodDetected }) => {
-  const {
-    videoRef,
+  const { 
+    videoRef, 
     canvasRef,
     isModelLoaded,
     isModelLoading,
@@ -25,58 +26,63 @@ const FaceMoodDetector: React.FC<FaceMoodDetectorProps> = ({ onMoodDetected }) =
     startCamera,
     stopCamera,
     analyzeMood,
-    openModelDownloadLink
+    // We're not using openModelDownloadLink because it doesn't exist
   } = useFaceDetection({ onMoodDetected });
-
+  
+  // Clean up camera when component unmounts
+  useEffect(() => {
+    return () => {
+      if (isCameraActive) {
+        stopCamera();
+      }
+    };
+  }, [isCameraActive, stopCamera]);
+  
   return (
-    <CardGlass className="p-4 mb-6">
-      <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold mb-2">Detect Your Mood</h3>
-        <p className="text-sm text-muted-foreground">
-          Let us analyze your facial expression to recommend music that matches your mood.
-        </p>
-      </div>
+    <CardGlass className="w-full">
+      <CardGlassHeader>
+        <CardGlassTitle>Mood Detection</CardGlassTitle>
+      </CardGlassHeader>
       
-      {/* Model status section */}
-      <ModelStatus 
-        modelLoadingError={modelLoadingError}
-        isModelLoading={isModelLoading}
-        openModelDownloadLink={openModelDownloadLink}
-      />
-      
-      {/* Camera view section */}
-      <CameraView 
-        videoRef={videoRef}
-        canvasRef={canvasRef}
-        isCameraActive={isCameraActive}
-      />
-      
-      {/* Detection results display */}
-      {detectedExpression && !isCameraActive && (
-        <div className="text-center mb-4">
-          <p className="text-sm">
-            Detected expression: <span className="font-semibold">{detectedExpression}</span>
-          </p>
+      <CardGlassContent>
+        <ModelStatus 
+          isModelLoaded={isModelLoaded} 
+          isModelLoading={isModelLoading} 
+          error={modelLoadingError} 
+        />
+        
+        <CameraView 
+          videoRef={videoRef} 
+          canvasRef={canvasRef} 
+          isCameraActive={isCameraActive}
+          isAnalyzing={isAnalyzing}
+          detectedExpression={detectedExpression}
+        />
+        
+        {cameraError && (
+          <div className="p-4 mb-4 bg-destructive/20 text-destructive rounded-md">
+            <p>{cameraError}</p>
+          </div>
+        )}
+        
+        <CameraControls
+          isCameraActive={isCameraActive}
+          isModelLoaded={isModelLoaded}
+          isAnalyzing={isAnalyzing}
+          onStartCamera={startCamera}
+          onStopCamera={stopCamera}
+          onAnalyzeMood={analyzeMood}
+        />
+        
+        <div className="mt-4 flex justify-end">
+          <Button 
+            variant="outline" 
+            onClick={() => onMoodDetected('relaxed')}
+          >
+            Cancel
+          </Button>
         </div>
-      )}
-      
-      {/* Camera error display */}
-      {cameraError && (
-        <div className="text-destructive text-sm text-center mb-4">
-          {cameraError}
-        </div>
-      )}
-      
-      {/* Camera controls section */}
-      <CameraControls 
-        isCameraActive={isCameraActive}
-        isModelLoaded={isModelLoaded}
-        isAnalyzing={isAnalyzing}
-        isModelLoading={isModelLoading}
-        startCamera={startCamera}
-        stopCamera={stopCamera}
-        analyzeMood={analyzeMood}
-      />
+      </CardGlassContent>
     </CardGlass>
   );
 };

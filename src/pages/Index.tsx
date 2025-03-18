@@ -1,135 +1,124 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AnimatedBackground from '@/components/AnimatedBackground';
-import MoodSelector, { Mood } from '@/components/MoodSelector';
-import { CardGlass } from '@/components/ui/card-glass';
-import { Button } from '@/components/ui/button';
-import { Library, Music } from 'lucide-react';
-import { toast } from 'sonner';
-import SpotifyLogin from '@/components/SpotifyLogin';
-import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
+import MoodSelector, { type Mood } from '@/components/MoodSelector';
 import FaceMoodDetector from '@/components/FaceMoodDetector';
+import SpotifyLogin from '@/components/SpotifyLogin';
+import { Button } from '@/components/ui/button';
+import { LibraryBig, Music, Radio } from 'lucide-react';
+import AnimatedBackground from '@/components/AnimatedBackground';
+import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
 
 const Index = () => {
+  const [selectedMood, setSelectedMood] = useState<Mood>('relaxed');
+  const [showDetector, setShowDetector] = useState(false);
   const navigate = useNavigate();
-  const [selectedMood, setSelectedMood] = useState<Mood | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(false);
-  const { token, loading } = useSpotifyAuth();
-
-  const getRecommendations = () => {
-    if (!token) {
-      toast.error('Please connect to Spotify first!');
-      return;
-    }
-    
-    if (!selectedMood) {
-      toast.error('Please select a mood first!');
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate(`/recommendations?mood=${selectedMood}`);
-    }, 1500);
+  const { token, userProfile } = useSpotifyAuth();
+  
+  const handleMoodSelect = (mood: Mood) => {
+    setSelectedMood(mood);
   };
-
-  const goToLibrary = () => {
+  
+  const handleDetectMood = () => {
+    setShowDetector(true);
+  };
+  
+  const handleDetectionComplete = (detectedMood: Mood) => {
+    setSelectedMood(detectedMood);
+    setShowDetector(false);
+  };
+  
+  const handleGetRecommendations = () => {
+    navigate(`/recommendations?mood=${selectedMood}`);
+  };
+  
+  const handleGoToLibrary = () => {
     navigate('/library');
   };
-
-  const handleMoodDetected = (mood: Mood) => {
-    setSelectedMood(mood);
-    toast.success(`Mood detected: ${mood}. Ready for recommendations!`);
+  
+  const handleGoToSoundCloud = () => {
+    navigate('/soundcloud');
   };
-
+  
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 relative">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 relative">
       <AnimatedBackground mood={selectedMood} />
       
-      <div className="w-full max-w-4xl mx-auto z-10 animate-fade-in">
-        <header className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-3">FeelGroove</h1>
-          <p className="text-lg text-muted-foreground">Music that matches your mood</p>
+      <div className="max-w-3xl mx-auto w-full z-10">
+        <header className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600 dark:to-blue-400">
+            FeelGroove
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Discover music that matches your mood
+          </p>
         </header>
         
-        <CardGlass className="mb-8">
-          {!token && !loading ? (
-            <div className="text-center py-8">
-              <h2 className="text-xl font-semibold mb-4">Get Started</h2>
-              <SpotifyLogin />
-            </div>
-          ) : (
-            <>
-              {/* Face Mood Detector Component */}
-              <FaceMoodDetector onMoodDetected={handleMoodDetected} />
+        {showDetector ? (
+          <FaceMoodDetector onMoodDetected={handleDetectionComplete} />
+        ) : (
+          <div className="space-y-8">
+            <MoodSelector selectedMood={selectedMood} onSelectMood={handleMoodSelect} />
+            
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Button onClick={handleDetectMood}>
+                Detect My Mood
+              </Button>
               
-              <MoodSelector 
-                onMoodSelect={setSelectedMood}
-                selectedMood={selectedMood}
-              />
+              <Button 
+                onClick={handleGetRecommendations}
+                variant="default"
+              >
+                <Radio className="mr-2 h-4 w-4" /> 
+                Get Recommendations
+              </Button>
               
-              <div className="mt-8 flex justify-center gap-4">
-                <Button 
-                  size="lg" 
-                  className="animate-fade-in"
-                  onClick={getRecommendations}
-                  disabled={!selectedMood || isLoading}
-                >
-                  {isLoading ? 'Finding Perfect Songs...' : 'Get Recommendations'}
-                </Button>
-                
-                {token && (
-                  <Button 
-                    size="lg" 
-                    variant="outline"
-                    className="animate-fade-in flex items-center gap-2"
-                    onClick={goToLibrary}
-                  >
-                    <Library size={18} />
-                    My Library
-                  </Button>
-                )}
-              </div>
-            </>
-          )}
-        </CardGlass>
-        
-        {/* App Description */}
-        <CardGlass className="mt-12 text-center p-8 max-w-2xl mx-auto animate-fade-in animation-delay-500">
-          <h2 className="text-xl font-semibold mb-4">Discover Music Based on Your Mood</h2>
-          <p className="text-muted-foreground mb-6">
-            FeelGroove analyzes your mood and creates personalized playlists that match 
-            exactly how you're feeling. Select your mood or let us detect it using 
-            our advanced emotion recognition technology.
-          </p>
-          
-          <div className="grid grid-cols-3 gap-4 mt-6">
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                <span className="text-primary text-lg font-semibold">1</span>
-              </div>
-              <p className="text-sm">Select Mood</p>
+              <Button
+                onClick={handleGoToLibrary}
+                variant="outline"
+              >
+                <LibraryBig className="mr-2 h-4 w-4" />
+                Music Library
+              </Button>
+              
+              <Button
+                onClick={handleGoToSoundCloud}
+                variant="outline"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white hover:text-white"
+              >
+                <Music className="mr-2 h-4 w-4" />
+                SoundCloud Player
+              </Button>
             </div>
             
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                <span className="text-primary text-lg font-semibold">2</span>
+            {!token && (
+              <div className="flex flex-col items-center gap-4 mt-8">
+                <p className="text-center text-muted-foreground">
+                  Connect with Spotify to get personalized recommendations
+                </p>
+                <SpotifyLogin />
               </div>
-              <p className="text-sm">Get Recommendations</p>
-            </div>
+            )}
             
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                <span className="text-primary text-lg font-semibold">3</span>
+            {userProfile && (
+              <div className="mt-6 p-4 bg-card/40 backdrop-blur-sm rounded-lg">
+                <div className="flex items-center gap-4">
+                  {userProfile.images && userProfile.images[0] && (
+                    <img 
+                      src={userProfile.images[0].url} 
+                      alt={userProfile.display_name} 
+                      className="w-12 h-12 rounded-full"
+                    />
+                  )}
+                  <div>
+                    <h3 className="font-medium">Welcome, {userProfile.display_name}</h3>
+                    <p className="text-sm text-muted-foreground">Connected to Spotify</p>
+                  </div>
+                </div>
               </div>
-              <p className="text-sm">Enjoy Music</p>
-            </div>
+            )}
           </div>
-        </CardGlass>
+        )}
       </div>
     </div>
   );
